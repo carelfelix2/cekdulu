@@ -2,15 +2,12 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-}
+import { apiFetch } from '@/lib/api';
+import { clearAuthSession, getAccessToken } from '@/lib/auth-session';
+import type { AuthUser } from '@/lib/auth';
 
 interface UseAuthReturn {
-  user: User | null;
+  user: AuthUser | null;
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -19,23 +16,37 @@ interface UseAuthReturn {
 
 export function useAuth(): UseAuthReturn {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if token exists in localStorage
-    const storedToken = localStorage.getItem('authToken');
-    if (storedToken) {
+    const bootstrap = async () => {
+      const storedToken = getAccessToken();
       setToken(storedToken);
-      // Optionally, verify token with the server
-      // You can add a call to validate the token here
-    }
-    setIsLoading(false);
+
+      if (!storedToken) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await apiFetch<AuthUser>('/auth/me');
+        setUser(response.data);
+      } catch {
+        clearAuthSession();
+        setToken(null);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void bootstrap();
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('authToken');
+    clearAuthSession();
     setToken(null);
     setUser(null);
     router.push('/auth/login');

@@ -44,16 +44,35 @@ export class AuthService {
       data: {
         email: dto.email,
         name: dto.name,
-        passwordHash
-      },
+        passwordHash,
+        status: 'ACTIVE'
+      }
+    });
+
+    const defaultRole = await this.prisma.role.findFirst({ where: { name: 'User' } });
+    if (defaultRole) {
+      await this.prisma.userRole.create({
+        data: {
+          userId: user.id,
+          roleId: defaultRole.id
+        }
+      });
+    }
+
+    const userWithRoles = await this.prisma.user.findUnique({
+      where: { id: user.id },
       include: { roles: { include: { role: true } } }
     });
 
-    const roleKeys = user.roles.map((item: { role: { key: string } }) => item.role.key);
-    const tokens = this.createTokens({ id: user.id, email: user.email, roles: roleKeys });
-    await this.persistRefreshToken(user.id, tokens.refreshToken);
+    if (!userWithRoles) {
+      throw new BadRequestException('Failed to create user');
+    }
 
-    return { user: this.sanitizeUser(user), ...tokens };
+    const roleKeys = userWithRoles.roles.map((item: { role: { key: string } }) => item.role.key);
+    const tokens = this.createTokens({ id: userWithRoles.id, email: userWithRoles.email, roles: roleKeys });
+    await this.persistRefreshToken(userWithRoles.id, tokens.refreshToken);
+
+    return { user: this.sanitizeUser(userWithRoles), ...tokens };
   }
 
   async login(dto: LoginDto) {

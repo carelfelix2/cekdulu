@@ -1,4 +1,5 @@
 import { prisma } from '../src/client';
+import { hashSync } from 'bcryptjs';
 
 async function main() {
   const permissions = [
@@ -13,6 +14,8 @@ async function main() {
     { key: 'admin.access', name: 'Access Admin Dashboard' }
   ];
 
+  const getPasswordHash = (password: string) => hashSync(password, 12);
+
   for (const permission of permissions) {
     await prisma.permission.upsert({
       where: { key: permission.key },
@@ -22,6 +25,7 @@ async function main() {
   }
 
   const roles = [
+    { key: 'USER', name: 'User', permissions: [] },
     { key: 'SUPER_ADMIN', name: 'Super Admin', permissions: permissions.map((permission) => permission.key) },
     { key: 'ADMIN', name: 'Admin', permissions: ['products.read', 'products.write', 'catalog.write', 'articles.write', 'deals.write', 'analytics.read', 'scrapers.manage', 'affiliate.write', 'admin.access'] },
     { key: 'EDITOR', name: 'Editor', permissions: ['products.read', 'articles.write', 'deals.write', 'affiliate.write'] },
@@ -31,16 +35,81 @@ async function main() {
 
   for (const role of roles) {
     const record = await prisma.role.upsert({
-      where: { key: role.key },
+      where: { key: role.key as any },
       update: { name: role.name },
-      create: { key: role.key, name: role.name }
+      create: { key: role.key as any, name: role.name }
     });
 
     await prisma.rolePermission.deleteMany({ where: { roleId: record.id } });
     const permissionRecords = await prisma.permission.findMany({ where: { key: { in: role.permissions } } });
     await prisma.rolePermission.createMany({
-      data: permissionRecords.map((permission) => ({ roleId: record.id, permissionId: permission.id })),
+      data: permissionRecords.map((permission: { id: string }) => ({ roleId: record.id, permissionId: permission.id })),
       skipDuplicates: true
+    });
+  }
+
+  const userRole = await prisma.role.findFirst({ where: { name: 'User' } });
+  const adminRole = await prisma.role.findFirst({ where: { name: 'Admin' } });
+
+  if (userRole) {
+    const user = await prisma.user.upsert({
+      where: { email: 'user@cekdulu.test' },
+      update: {
+        name: 'Demo User',
+        status: 'ACTIVE',
+        passwordHash: await getPasswordHash('User12345!')
+      },
+      create: {
+        email: 'user@cekdulu.test',
+        name: 'Demo User',
+        status: 'ACTIVE',
+        passwordHash: await getPasswordHash('User12345!')
+      }
+    });
+
+    await prisma.userRole.upsert({
+      where: {
+        userId_roleId: {
+          userId: user.id,
+          roleId: userRole.id
+        }
+      },
+      update: {},
+      create: {
+        userId: user.id,
+        roleId: userRole.id
+      }
+    });
+  }
+
+  if (adminRole) {
+    const admin = await prisma.user.upsert({
+      where: { email: 'admin@cekdulu.test' },
+      update: {
+        name: 'Demo Admin',
+        status: 'ACTIVE',
+        passwordHash: await getPasswordHash('Admin12345!')
+      },
+      create: {
+        email: 'admin@cekdulu.test',
+        name: 'Demo Admin',
+        status: 'ACTIVE',
+        passwordHash: await getPasswordHash('Admin12345!')
+      }
+    });
+
+    await prisma.userRole.upsert({
+      where: {
+        userId_roleId: {
+          userId: admin.id,
+          roleId: adminRole.id
+        }
+      },
+      update: {},
+      create: {
+        userId: admin.id,
+        roleId: adminRole.id
+      }
     });
   }
 }
@@ -52,5 +121,5 @@ main()
   .catch(async (error) => {
     console.error(error);
     await prisma.$disconnect();
-    process.exit(1);
+    throw error;
   });

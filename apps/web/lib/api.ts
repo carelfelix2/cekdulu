@@ -1,12 +1,15 @@
 import type { ApiResponse } from '@cekdulu/shared';
+import { getAccessToken } from './auth-session';
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<ApiResponse<T>> {
+  const token = getAccessToken();
   const response = await fetch(`${apiBase}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init?.headers ?? {})
     },
     cache: 'no-store'

@@ -1,17 +1,18 @@
 import { z } from 'zod';
 import type { ApiResponse } from '@cekdulu/shared';
+import { clearAuthSession, saveAuthSession } from './auth-session';
 
 // Validation schemas
 export const loginSchema = z.object({
   email: z.string().email('Email tidak valid'),
-  password: z.string().min(6, 'Password minimal 6 karakter')
+  password: z.string().min(8, 'Password minimal 8 karakter')
 });
 
 export const registerSchema = z
   .object({
     name: z.string().min(2, 'Nama minimal 2 karakter'),
     email: z.string().email('Email tidak valid'),
-    password: z.string().min(6, 'Password minimal 6 karakter'),
+    password: z.string().min(8, 'Password minimal 8 karakter'),
     confirmPassword: z.string()
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -22,8 +23,22 @@ export const registerSchema = z
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 
+export type AuthUser = {
+  id: string;
+  email: string;
+  name: string;
+  status: string;
+  roles: string[];
+};
+
+export type AuthPayload = {
+  user: AuthUser;
+  accessToken: string;
+  refreshToken: string;
+};
+
 // Auth API functions
-export async function login(credentials: LoginInput): Promise<ApiResponse<{ token: string; user: any }>> {
+export async function login(credentials: LoginInput): Promise<ApiResponse<AuthPayload>> {
   const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -36,18 +51,14 @@ export async function login(credentials: LoginInput): Promise<ApiResponse<{ toke
   }
 
   const data = await response.json();
-  
-  // Store token in localStorage
-  if (data.data?.token) {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('authToken', data.data.token);
-    }
+  if (data.data?.accessToken) {
+    saveAuthSession(data.data.accessToken, data.data.refreshToken);
   }
 
   return data;
 }
 
-export async function register(input: RegisterInput): Promise<ApiResponse<{ token: string; user: any }>> {
+export async function register(input: RegisterInput): Promise<ApiResponse<AuthPayload>> {
   const { confirmPassword, ...data } = input;
 
   const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'}/auth/register`, {
@@ -62,19 +73,13 @@ export async function register(input: RegisterInput): Promise<ApiResponse<{ toke
   }
 
   const responseData = await response.json();
-
-  // Store token in localStorage
-  if (responseData.data?.token) {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('authToken', responseData.data.token);
-    }
+  if (responseData.data?.accessToken) {
+    saveAuthSession(responseData.data.accessToken, responseData.data.refreshToken);
   }
 
   return responseData;
 }
 
 export async function logout(): Promise<void> {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('authToken');
-  }
+  clearAuthSession();
 }

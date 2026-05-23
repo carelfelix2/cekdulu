@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation';
 import { ZodError, z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import type { AuthPayload } from '@/lib/auth';
 
 interface AuthFormProps {
   type: 'login' | 'register';
-  schema: any;
-  onSubmit: (data: any) => Promise<any>;
+  schema: z.ZodTypeAny;
+  onSubmit: (data: any) => Promise<{ data: AuthPayload }>;
   fields: Array<{
     name: string;
     label: string;
@@ -70,15 +71,21 @@ export function AuthForm({
       const validatedData = schema.parse(formData);
 
       // Call the API
-      await onSubmit(validatedData);
+      const result = await onSubmit(validatedData);
 
       // Redirect on success
-      router.push(type === 'login' ? '/dashboard' : '/login?registered=true');
+      if (type === 'login') {
+        const roles = result.data?.user?.roles ?? [];
+        const isAdmin = roles.includes('SUPER_ADMIN') || roles.includes('ADMIN');
+        router.push(isAdmin ? '/admin' : '/dashboard');
+      } else {
+        router.push('/dashboard?registered=true');
+      }
     } catch (err) {
       if (err instanceof ZodError) {
         // Handle validation errors
         const errors: FieldErrors = {};
-        err.errors.forEach((error) => {
+        err.issues.forEach((error) => {
           const path = error.path[0] as string;
           errors[path] = error.message;
         });
