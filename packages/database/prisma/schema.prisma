@@ -116,6 +116,7 @@ model User {
   articles       Article[]     @relation("ArticleAuthor")
   analytics     AnalyticsEvent[]
   priceAlerts   PriceAlert[]
+  searchQueries SearchQuery[]
   redirectClicks RedirectClick[]
 
   @@index([status, createdAt])
@@ -197,9 +198,11 @@ model Marketplace {
   deals            Deal[]
   scrapeJobs       ScrapeJob[]
   pricePoints      PricePoint[]
+  priceAlerts      PriceAlert[]
   analytics        AnalyticsEvent[]
   redirects        RedirectClick[]
   productMatches   ProductMatchCandidate[]
+  scrapeRuns       ScrapeRun[]
 
   @@index([active, sortOrder])
 }
@@ -229,7 +232,6 @@ model Category {
   parent      Category?   @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
   children    Category[]  @relation("CategoryTree")
   products    Product[]
-  articles    Article[]
 
   @@index([parentId, sortOrder])
 }
@@ -277,13 +279,13 @@ model Product {
   listings             ProductListing[]
   pricePoints          PricePoint[]
   affiliateLinks       AffiliateLink[]
-  articles             Article[]
   deals                Deal[]
   priceAlerts          PriceAlert[]
   searchQueries        SearchQuery[]
   faqItems             ProductFAQ[]
   redirects            RedirectClick[]
   analytics            AnalyticsEvent[]
+  sourceMatches        ProductMatchCandidate[] @relation("ProductSource")
   candidateMatches     ProductMatchCandidate[] @relation("ProductCandidate")
 
   @@index([categoryId, isActive])
@@ -370,6 +372,7 @@ model ProductListing {
   seller            Seller?            @relation(fields: [sellerId], references: [id], onDelete: SetNull)
   pricePoints       PricePoint[]
   affiliateLinks    AffiliateLink[]
+  deals             Deal[]
   redirectClicks    RedirectClick[]
 
   @@unique([marketplaceId, externalId])
@@ -581,7 +584,7 @@ model ProductMatchCandidate {
   status            JobStatus     @default(QUEUED)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
-  product           Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product           Product       @relation("ProductSource", fields: [productId], references: [id], onDelete: Cascade)
   candidate         Product       @relation("ProductCandidate", fields: [candidateProductId], references: [id], onDelete: Cascade)
   marketplace       Marketplace?  @relation(fields: [marketplaceId], references: [id], onDelete: SetNull)
 
