@@ -6,12 +6,12 @@ export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
   @Post('events')
-  track(@Body() body: { type: string; productId?: string; marketplaceId?: string; articleId?: string; sessionId?: string; properties?: Record<string, unknown> }) {
+  track(@Body() body: { type: string; productId?: string; marketplaceId?: string; articleId?: string; sessionId?: string; properties?: Record<string, unknown> }): Promise<any> {
     return this.analyticsService.track(body);
   }
 
   @Get('dashboard')
-  dashboard() {
+  dashboard(): Promise<{ products: number; articles: number; deals: number; clicks: number }> {
     return this.analyticsService.dashboard();
   }
 }

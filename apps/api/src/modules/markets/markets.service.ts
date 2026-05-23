@@ -9,19 +9,19 @@ export class MarketsService {
     return this.prismaService.client;
   }
 
-  list() {
+  list(): Promise<any[]> {
     return this.prisma.marketplace.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] });
   }
 
-  create(data: { slug: string; name: string; displayName: string; color: string }) {
-    return this.prisma.marketplace.create({ data: { ...data, active: true, affiliateEnabled: false } });
+  create(data: { slug: string; name: string; displayName: string; color: string }): Promise<any> {
+    return this.prisma.marketplace.create({ data: { ...(data as Record<string, unknown>), active: true, affiliateEnabled: false } as never });
   }
 
-  update(id: string, data: Partial<{ name: string; displayName: string; color: string; active: boolean }>) {
+  update(id: string, data: Partial<{ name: string; displayName: string; color: string; active: boolean }>): Promise<any> {
     return this.prisma.marketplace.update({ where: { id }, data });
   }
 
-  remove(id: string) {
+  remove(id: string): Promise<any> {
     return this.prisma.marketplace.delete({ where: { id } });
   }
 }

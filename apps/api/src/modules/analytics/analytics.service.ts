@@ -9,7 +9,7 @@ export class AnalyticsService {
     return this.prismaService.client;
   }
 
-  track(data: { type: string; productId?: string; marketplaceId?: string; articleId?: string; sessionId?: string; properties?: Record<string, unknown> }) {
+  track(data: { type: string; productId?: string; marketplaceId?: string; articleId?: string; sessionId?: string; properties?: Record<string, unknown> }): Promise<any> {
     return this.prisma.analyticsEvent.create({
       data: {
         type: data.type as never,
@@ -17,12 +17,12 @@ export class AnalyticsService {
         marketplaceId: data.marketplaceId,
         articleId: data.articleId,
         sessionId: data.sessionId,
-        properties: data.properties ?? {}
+        properties: data.properties ? (data.properties as never) : undefined
       }
     });
   }
 
-  async dashboard() {
+  async dashboard(): Promise<{ products: number; articles: number; deals: number; clicks: number }> {
     const [products, articles, deals, clicks] = await Promise.all([
       this.prisma.product.count(),
       this.prisma.article.count(),

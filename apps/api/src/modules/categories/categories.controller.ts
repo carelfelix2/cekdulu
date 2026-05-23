@@ -6,22 +6,22 @@ export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Get()
-  list() {
+  list(): Promise<any> {
     return this.categoriesService.list();
   }
 
   @Post()
-  create(@Body() body: { slug: string; name: string; description?: string; parentId?: string }) {
+  create(@Body() body: { slug: string; name: string; description?: string; parentId?: string }): Promise<any> {
     return this.categoriesService.create(body);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: Partial<{ name: string; description?: string; parentId?: string; sortOrder: number }>) {
+  update(@Param('id') id: string, @Body() body: Partial<{ name: string; description?: string; parentId?: string; sortOrder: number }>): Promise<any> {
     return this.categoriesService.update(id, body);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: string): Promise<any> {
     return this.categoriesService.remove(id);
   }
 }

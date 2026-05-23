@@ -9,19 +9,19 @@ export class BrandsService {
     return this.prismaService.client;
   }
 
-  list() {
+  list(): Promise<any[]> {
     return this.prisma.brand.findMany({ orderBy: { name: 'asc' } });
   }
 
-  create(data: { slug: string; name: string; logoUrl?: string; description?: string }) {
+  create(data: { slug: string; name: string; logoUrl?: string; description?: string }): Promise<any> {
     return this.prisma.brand.create({ data });
   }
 
-  update(id: string, data: Partial<{ name: string; logoUrl?: string; description?: string }>) {
+  update(id: string, data: Partial<{ name: string; logoUrl?: string; description?: string }>): Promise<any> {
     return this.prisma.brand.update({ where: { id }, data });
   }
 
-  remove(id: string) {
+  remove(id: string): Promise<any> {
     return this.prisma.brand.delete({ where: { id } });
   }
 }

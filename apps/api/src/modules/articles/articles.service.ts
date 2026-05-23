@@ -9,11 +9,11 @@ export class ArticlesService {
     return this.prismaService.client;
   }
 
-  list() {
+  list(): Promise<any[]> {
     return this.prisma.article.findMany({ include: { category: true, tags: { include: { tag: true } } }, orderBy: { updatedAt: 'desc' }, take: 100 });
   }
 
-  published() {
+  published(): Promise<any[]> {
     return this.prisma.article.findMany({
       where: { status: 'PUBLISHED' },
       include: { category: true },
@@ -22,7 +22,7 @@ export class ArticlesService {
     });
   }
 
-  async detail(slug: string) {
+  async detail(slug: string): Promise<any> {
     const article = await this.prisma.article.findUnique({
       where: { slug },
       include: { category: true, tags: { include: { tag: true } }, faqItems: true, author: true }
@@ -32,15 +32,15 @@ export class ArticlesService {
     return article;
   }
 
-  create(data: Record<string, unknown>) {
+  create(data: Record<string, unknown>): Promise<any> {
     return this.prisma.article.create({ data: data as never });
   }
 
-  update(id: string, data: Record<string, unknown>) {
+  update(id: string, data: Record<string, unknown>): Promise<any> {
     return this.prisma.article.update({ where: { id }, data: data as never });
   }
 
-  remove(id: string) {
+  remove(id: string): Promise<any> {
     return this.prisma.article.delete({ where: { id } });
   }
 }

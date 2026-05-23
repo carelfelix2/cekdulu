@@ -9,7 +9,7 @@ export class RedirectsService {
     return this.prismaService.client;
   }
 
-  async trackAndResolve(shortCode: string, source: string) {
+  async trackAndResolve(shortCode: string, source: string): Promise<{ url: string; link: any }> {
     const link = await this.prisma.affiliateLink.findUnique({ where: { shortCode }, include: { listing: true, product: true, marketplace: true } });
     if (!link) throw new NotFoundException('Affiliate link not found');
 

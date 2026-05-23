@@ -20,7 +20,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
       return;
     }
 
-    this.logger.error(exception);
+    if (exception instanceof Error) {
+      this.logger.error(exception.stack ?? exception.message);
+    } else {
+      this.logger.error(JSON.stringify(exception));
+    }
     response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'Internal server error'

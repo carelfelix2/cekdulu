@@ -9,19 +9,19 @@ export class CategoriesService {
     return this.prismaService.client;
   }
 
-  list() {
+  list(): Promise<any[]> {
     return this.prisma.category.findMany({ orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] });
   }
 
-  create(data: { slug: string; name: string; description?: string; parentId?: string }) {
+  create(data: { slug: string; name: string; description?: string; parentId?: string }): Promise<any> {
     return this.prisma.category.create({ data });
   }
 
-  update(id: string, data: Partial<{ name: string; description?: string; parentId?: string; sortOrder: number }>) {
+  update(id: string, data: Partial<{ name: string; description?: string; parentId?: string; sortOrder: number }>): Promise<any> {
     return this.prisma.category.update({ where: { id }, data });
   }
 
-  remove(id: string) {
+  remove(id: string): Promise<any> {
     return this.prisma.category.delete({ where: { id } });
   }
 }

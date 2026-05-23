@@ -9,11 +9,11 @@ export class DealsService {
     return this.prismaService.client;
   }
 
-  list() {
+  list(): Promise<any[]> {
     return this.prisma.deal.findMany({ include: { marketplace: true, product: true }, orderBy: { updatedAt: 'desc' }, take: 100 });
   }
 
-  active() {
+  active(): Promise<any[]> {
     return this.prisma.deal.findMany({
       where: { status: 'ACTIVE' },
       include: { marketplace: true, product: true },
@@ -22,21 +22,21 @@ export class DealsService {
     });
   }
 
-  async detail(slug: string) {
+  async detail(slug: string): Promise<any> {
     const deal = await this.prisma.deal.findUnique({ where: { slug }, include: { marketplace: true, product: true, listing: true } });
     if (!deal) throw new NotFoundException('Deal not found');
     return deal;
   }
 
-  create(data: Record<string, unknown>) {
+  create(data: Record<string, unknown>): Promise<any> {
     return this.prisma.deal.create({ data: data as never });
   }
 
-  update(id: string, data: Record<string, unknown>) {
+  update(id: string, data: Record<string, unknown>): Promise<any> {
     return this.prisma.deal.update({ where: { id }, data: data as never });
   }
 
-  remove(id: string) {
+  remove(id: string): Promise<any> {
     return this.prisma.deal.delete({ where: { id } });
   }
 }
