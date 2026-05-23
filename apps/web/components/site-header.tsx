@@ -30,9 +30,16 @@ export function SiteHeader() {
           <Button variant="outline" size="sm" className="hidden sm:inline-flex">
             <Search className="mr-2 h-4 w-4" /> Cari
           </Button>
-          <Button variant="secondary" size="sm" className="hidden sm:inline-flex">
-            Masuk Admin
-          </Button>
+          <Link href="/auth/login">
+            <Button variant="outline" size="sm" className="hidden sm:inline-flex">
+              Masuk
+            </Button>
+          </Link>
+          <Link href="/auth/register">
+            <Button variant="secondary" size="sm" className="hidden sm:inline-flex">
+              Daftar
+            </Button>
+          </Link>
           <Button variant="outline" size="sm" className="lg:hidden">
             <Menu className="h-4 w-4" />
           </Button>
