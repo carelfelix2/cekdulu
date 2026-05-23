@@ -1,0 +1,18 @@
+{
+  "name": "cekdulu",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "db:generate": "pnpm --filter @cekdulu/database prisma generate",
+    "db:migrate": "pnpm --filter @cekdulu/database prisma migrate dev",
+    "db:studio": "pnpm --filter @cekdulu/database prisma studio"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.8",
+    "typescript": "^5.6.3"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "outDir": "dist",
+    "rootDir": "src",
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "incremental": true,
+    "skipLibCheck": true,
+    "noImplicitAny": true,
+    "paths": {
+      "@cekdulu/shared": ["../../packages/shared/src/index.ts"],
+      "@cekdulu/shared/*": ["../../packages/shared/src/*"],
+      "@cekdulu/database": ["../../packages/database/src/index.ts"],
+      "@cekdulu/database/*": ["../../packages/database/src/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

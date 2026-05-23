@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap');
+
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#F7F6F2;
+    --surface:#FFFFFF;
+    --surface2:#F0EFE9;
+    --border:#E8E7E1;
+    --border2:#D4D2C8;
+    --text:#1A1915;
+    --text2:#6B6A65;
+    --text3:#9B9A95;
+    --accent:#E8431A;
+    --accent2:#FF6B3D;
+    --green:#1D9E75;
+    --green-bg:#E1F5EE;
+    --amber:#BA7517;
+    --amber-bg:#FAEEDA;
+    --blue:#185FA5;
+    --blue-bg:#E6F1FB;
+    --red:#A32D2D;
+    --red-bg:#FCEBEB;
+    --r:10px;
+    --r2:14px;
+    --shadow:0 1px 3px rgba(0,0,0,0.06),0 4px 16px rgba(0,0,0,0.04);
+    --shadow2:0 2px 8px rgba(0,0,0,0.08),0 8px 32px rgba(0,0,0,0.06);
+  }
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+
+  /* NAV */
+  .nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+  .logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+  .logo-mark{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;letter-spacing:-0.5px}
+  .logo-text{font-weight:800;font-size:16px;color:var(--text);letter-spacing:-0.3px}
+  .logo-text span{color:var(--accent)}
+  .nav-links{display:flex;gap:4px}
+  .nav-link{padding:6px 12px;border-radius:7px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all 0.15s;border:none;background:none}
+  .nav-link:hover,.nav-link.active{background:var(--surface2);color:var(--text)}
+  .nav-right{display:flex;align-items:center;gap:8px}
+  .btn-sm{padding:6px 14px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s}
+  .btn-outline{background:none;border:1px solid var(--border2);color:var(--text)}
+  .btn-outline:hover{background:var(--surface2)}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover{background:var(--accent2)}
+
+  /* PAGES */
+  .page{display:none;animation:fadeIn 0.2s ease}
+  .page.active{display:block}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+  /* HERO */
+  .hero{padding:48px 24px 40px;text-align:center;background:var(--surface);border-bottom:1px solid var(--border)}
+  .hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--red-bg);color:var(--red);font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;margin-bottom:20px}
+  .hero-badge-dot{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  .hero h1{font-size:32px;font-weight:800;letter-spacing:-0.8px;line-height:1.15;margin-bottom:10px}
+  .hero h1 em{font-style:normal;color:var(--accent)}
+  .hero-sub{font-size:15px;color:var(--text2);max-width:480px;margin:0 auto 28px;line-height:1.6}
+  .search-box{max-width:560px;margin:0 auto 20px;position:relative}
+  .search-input{width:100%;padding:14px 52px 14px 18px;border:1.5px solid var(--border2);border-radius:12px;font-size:15px;font-family:inherit;background:var(--bg);outline:none;transition:border 0.15s;color:var(--text)}
+  .search-input:focus{border-color:var(--accent);background:var(--surface)}
+  .search-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:var(--accent);border:none;border-radius:8px;padding:7px 14px;color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+  .search-btn:hover{background:var(--accent2)}
+  .hero-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:24px}
+  .hero-tag{padding:5px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--text2);cursor:pointer;transition:all 0.15s}
+  .hero-tag:hover{background:var(--red-bg);color:var(--accent);border-color:var(--accent)}
+  .hero-stats{display:flex;justify-content:center;gap:32px}
+  .hero-stat{text-align:center}
+  .hero-stat-n{font-size:20px;font-weight:800;color:var(--text)}
+  .hero-stat-l{font-size:12px;color:var(--text3)}
+
+  /* MARKETPLACE BADGES */
+  .market-badges{display:flex;justify-content:center;gap:8px;padding:16px 24px;background:var(--bg);border-bottom:1px solid var(--border);flex-wrap:wrap}
+  .market-badge{display:flex;align-items:center;gap:6px;padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s}
+  .market-badge:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+  .market-dot{width:8px;height:8px;border-radius:50%}
+
+  /* MAIN LAYOUT */
+  .main{padding:24px;max-width:900px;margin:0 auto}
+  .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .section-title{font-size:16px;font-weight:700;letter-spacing:-0.2px}
+  .section-link{font-size:13px;color:var(--accent);font-weight:600;cursor:pointer;border:none;background:none}
+
+  /* FILTER BAR */
+  .filter-bar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .filter-chip{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text2);transition:all 0.15s}
+  .filter-chip:hover,.filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  /* PRODUCT CARDS */
+  .products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:32px}
+  .product-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;cursor:pointer;transition:all 0.2s;position:relative}
+  .product-card:hover{box-shadow:var(--shadow2);transform:translateY(-2px);border-color:var(--border2)}
+  .product-img{aspect-ratio:1;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:48px;position:relative}
+  .product-badge{position:absolute;top:8px;left:8px;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase}
+  .badge-hot{background:#FFF0EB;color:var(--accent)}
+  .badge-deal{background:var(--green-bg);color:var(--green)}
+  .badge-new{background:var(--blue-bg);color:var(--blue)}
+  .product-info{padding:12px}
+  .product-name{font-size:13px;font-weight:600;line-height:1.3;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .product-price{font-size:17px;font-weight:800;color:var(--accent);letter-spacing:-0.3px}
+  .product-price-orig{font-size:11px;color:var(--text3);text-decoration:line-through;margin-left:4px;font-weight:400}
+  .product-meta{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+  .product-rating{display:flex;align-items:center;gap:3px;font-size:11px;font-weight:600}
+  .product-rating-star{color:#F0A500}
+  .product-sold{font-size:11px;color:var(--text3)}
+  .product-shops{display:flex;gap:3px;margin-top:8px;flex-wrap:wrap}
+  .shop-pill{padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700}
+  .worth-bar{margin-top:8px}
+  .worth-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+  .worth-text{font-size:10px;color:var(--text3)}
+  .worth-score{font-size:10px;font-weight:700;color:var(--green)}
+  .worth-track{height:3px;background:var(--surface2);border-radius:3px;overflow:hidden}
+  .worth-fill{height:100%;border-radius:3px;background:var(--green);transition:width 0.6s ease}
+
+  /* COMPARISON TABLE */
+  .compare-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:24px}
+  .compare-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .compare-title-row{font-size:15px;font-weight:700}
+  .compare-table{width:100%;border-collapse:collapse;font-size:13px}
+  .compare-table th{background:var(--bg);padding:10px 14px;text-align:left;font-weight:600;color:var(--text2);border-bottom:1px solid var(--border);font-size:12px;text-transform:uppercase;letter-spacing:0.5px}
+  .compare-table td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+  .compare-table tr:last-child td{border-bottom:none}
+  .compare-table tr:hover td{background:var(--bg)}
+  .market-logo{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:12px}
+  .market-icon{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff}
+  .price-cell{font-size:15px;font-weight:800;color:var(--accent)}
+  .price-cheapest{color:var(--green)}
+  .price-tag-cheapest{display:inline-flex;align-items:center;gap:3px;background:var(--green-bg);color:var(--green);font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-left:6px}
+  .stock-ok{color:var(--green);font-size:11px;font-weight:600}
+  .stock-low{color:var(--amber);font-size:11px;font-weight:600}
+  .rating-cell{display:flex;align-items:center;gap:4px}
+  .btn-shop{padding:6px 14px;border-radius:7px;background:var(--accent);color:#fff;border:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background 0.15s}
+  .btn-shop:hover{background:var(--accent2)}
+  .cashback-tag{display:inline-block;background:var(--amber-bg);color:var(--amber);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px}
+
+  /* PRICE HISTORY */
+  .price-history-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:20px;margin-bottom:24px}
+  .chart-area{height:120px;position:relative;margin-top:12px}
+  .chart-svg{width:100%;height:100%}
+
+  /* WORTH IT SCORE */
+  .worth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:20px;margin-bottom:24px}
+  .worth-big-score{font-size:48px;font-weight:800;color:var(--green);letter-spacing:-2px;line-height:1}
+  .worth-breakdown{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+  .worth-item{padding:10px 12px;background:var(--bg);border-radius:8px}
+  .worth-item-label{font-size:11px;color:var(--text3);margin-bottom:3px}
+  .worth-item-bar{height:4px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:4px}
+  .worth-item-fill{height:100%;border-radius:4px;transition:width 0.8s ease}
+  .worth-item-val{font-size:12px;font-weight:700}
+
+  /* DEALS */
+  .deals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:32px}
+  .deal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px;display:flex;gap:12px;cursor:pointer;transition:all 0.2s}
+  .deal-card:hover{box-shadow:var(--shadow);border-color:var(--border2)}
+  .deal-emoji{font-size:36px;flex-shrink:0}
+  .deal-info{flex:1;min-width:0}
+  .deal-name{font-size:13px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .deal-discount{font-size:20px;font-weight:800;color:var(--accent)}
+  .deal-save{font-size:11px;color:var(--green);font-weight:600}
+  .deal-timer{display:flex;align-items:center;gap:4px;margin-top:6px;font-size:11px;color:var(--text3)}
+  .deal-timer-dot{width:5px;height:5px;background:var(--accent);border-radius:50%;animation:pulse 1.5s infinite}
+
+  /* TABS */
+  .tabs{display:flex;gap:4px;padding:4px;background:var(--surface2);border-radius:10px;margin-bottom:20px}
+  .tab{flex:1;padding:8px;border-radius:7px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;color:var(--text2);border:none;background:none;transition:all 0.15s}
+  .tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+
+  /* NOTIFICATION */
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;opacity:0;transform:translateY(8px);transition:all 0.25s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateY(0)}
+
+  /* SEARCH RESULTS */
+  .search-result-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer}
+  .search-result-row:last-child{border-bottom:none}
+  .search-result-row:hover{background:var(--bg);margin:0 -16px;padding:12px 16px}
+  .result-img{width:48px;height:48px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+
+  /* ARTICLE */
+  .article-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;cursor:pointer;transition:all 0.2s}
+  .article-card:hover{box-shadow:var(--shadow);border-color:var(--border2)}
+  .article-thumb{height:120px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:48px}
+  .article-body{padding:14px}
+  .article-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--blue);margin-bottom:6px}
+  .article-title{font-size:14px;font-weight:700;line-height:1.35;margin-bottom:6px}
+  .article-meta{font-size:11px;color:var(--text3)}
+  .articles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:32px}
+
+  /* TRENDING */
+  .trending-list{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:24px}
+  .trending-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s}
+  .trending-item:last-child{border-bottom:none}
+  .trending-item:hover{background:var(--bg)}
+  .trending-rank{width:24px;text-align:center;font-size:14px;font-weight:800;color:var(--text3)}
+  .trending-rank.top{color:var(--accent)}
+  .trending-emoji{font-size:28px;flex-shrink:0}
+  .trending-info{flex:1}
+  .trending-name{font-size:13px;font-weight:600}
+  .trending-price{font-size:12px;color:var(--accent);font-weight:700}
+  .trending-change{font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px}
+  .change-down{background:var(--green-bg);color:var(--green)}
+  .change-up{background:var(--red-bg);color:var(--red)}
+</style>
+</head>
+<body>
+<h2 class="sr-only">CekDulu — Platform Perbandingan Harga E-commerce Indonesia</h2>
+
+<!-- NAV -->
+<nav class="nav">
+  <a class="logo" onclick="showPage('home')">
+    <div class="logo-mark">CD</div>
+    <span class="logo-text">Cek<span>Dulu</span></span>
+  </a>
+  <div class="nav-links" id="navLinks">
+    <button class="nav-link active" onclick="showPage('home');setActiveNav(this)">Beranda</button>
+    <button class="nav-link" onclick="showPage('compare');setActiveNav(this)">Bandingkan</button>
+    <button class="nav-link" onclick="showPage('deals');setActiveNav(this)">Deals 🔥</button>
+    <button class="nav-link" onclick="showPage('artikel');setActiveNav(this)">Artikel</button>
+    <button class="nav-link" onclick="showPage('admin');setActiveNav(this)">Admin</button>
+  </div>
+  <div class="nav-right">
+    <button class="btn-sm btn-outline" onclick="showToast('Login berhasil! 👋')">Masuk</button>
+    <button class="btn-sm btn-primary">Daftar</button>
+  </div>
+</nav>
+
+<!-- PAGE: HOME -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-badge"><span class="hero-badge-dot"></span>Live price tracking aktif</div>
+    <h1>Cek Harga <em>Terbaik</em><br>Sebelum Beli</h1>
+    <p class="hero-sub">Bandingkan harga dari Shopee, Tokopedia, Lazada, Blibli & Bukalapak. Temukan produk paling worth it dalam hitungan detik.</p>
+    <div class="search-box">
+      <input class="search-input" type="text" placeholder="Cari produk, misal: iPhone 15, Samsung Galaxy..." id="searchInput" oninput="handleSearch(this.value)" onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="search-btn" onclick="doSearch()">Cari →</button>
+    </div>
+    <div class="hero-tags" id="heroTags">
+      <span class="hero-tag" onclick="fillSearch('iPhone 15')">iPhone 15</span>
+      <span class="hero-tag" onclick="fillSearch('Samsung Galaxy A55')">Samsung A55</span>
+      <span class="hero-tag" onclick="fillSearch('Xiaomi Redmi Note 13')">Redmi Note 13</span>
+      <span class="hero-tag" onclick="fillSearch('Laptop Gaming')">Laptop Gaming</span>
+      <span class="hero-tag" onclick="fillSearch('TWS Earbuds')">TWS Earbuds</span>
+      <span class="hero-tag" onclick="fillSearch('Air Purifier')">Air Purifier</span>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-stat-n" id="statProducts">2.4 Juta</div><div class="hero-stat-l">Produk Terdaftar</div></div>
+      <div class="hero-stat"><div class="hero-stat-n">5</div><div class="hero-stat-l">Marketplace</div></div>
+      <div class="hero-stat"><div class="hero-stat-n">Rp 420rb</div><div class="hero-stat-l">Rata-rata Hemat/bulan</div></div>
+      <div class="hero-stat"><div class="hero-stat-n">98.2%</div><div class="hero-stat-l">Akurasi Harga</div></div>
+    </div>
+  </div>
+
+  <div class="market-badges">
+    <div class="market-badge"><div class="market-dot" style="background:#EE4D2D"></div>Shopee</div>
+    <div class="market-badge"><div class="market-dot" style="background:#00AA5B"></div>Tokopedia</div>
+    <div class="market-badge"><div class="market-dot" style="background:#0F146D"></div>TikTok Shop</div>
+    <div class="market-badge"><div class="market-dot" style="background:#0091E3"></div>Lazada</div>
+    <div class="market-badge"><div class="market-dot" style="background:#005FCC"></div>Blibli</div>
+    <div class="market-badge"><div class="market-dot" style="background:#D71149"></div>Bukalapak</div>
+  </div>
+
+  <div class="main">
+    <!-- FILTER -->
+    <div class="filter-bar">
+      <span class="filter-chip active" onclick="filterCategory(this,'all')">Semua</span>
+      <span class="filter-chip" onclick="filterCategory(this,'hp')">📱 Smartphone</span>
+      <span class="filter-chip" onclick="filterCategory(this,'laptop')">💻 Laptop</span>
+      <span class="filter-chip" onclick="filterCategory(this,'audio')">🎧 Audio</span>
+      <span class="filter-chip" onclick="filterCategory(this,'rumah')">🏠 Rumah Tangga</span>
+      <span class="filter-chip" onclick="filterCategory(this,'fashion')">👟 Fashion</span>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="section-header">
+      <span class="section-title">🔥 Produk Paling Worth It</span>
+      <button class="section-link" onclick="showPage('compare');setActiveNavById('nav-compare')">Lihat semua →</button>
+    </div>
+    <div class="products-grid" id="productsGrid"></div>
+
+    <!-- TRENDING -->
+    <div class="section-header"><span class="section-title">📈 Trending Hari Ini</span></div>
+    <div class="trending-list" id="trendingList"></div>
+
+    <!-- DEALS PREVIEW -->
+    <div class="section-header">
+      <span class="section-title">⚡ Flash Deal Terbaik</span>
+      <button class="section-link" onclick="showPage('deals');setActiveNavById('nav-deals')">Lihat semua →</button>
+    </div>
+    <div class="deals-grid" id="homeDeals"></div>
+  </div>
+</div>
+
+<!-- PAGE: COMPARE -->
+<div class="page" id="page-compare">
+  <div class="main">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+      <div style="flex:1">
+        <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.4px" id="compareTitle">iPhone 15 128GB</h2>
+        <p style="font-size:13px;color:var(--text2);margin-top:2px">Ditemukan di 5 marketplace · Update: 2 menit lalu</p>
+      </div>
+      <button class="btn-sm btn-outline" onclick="showToast('🔔 Notifikasi harga aktif!')">🔔 Pantau Harga</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(this,'tab-compare')">Perbandingan</button>
+      <button class="tab" onclick="switchTab(this,'tab-history')">Histori Harga</button>
+      <button class="tab" onclick="switchTab(this,'tab-worth')">Worth It Score</button>
+      <button class="tab" onclick="switchTab(this,'tab-spec')">Spesifikasi</button>
+    </div>
+
+    <!-- TAB: COMPARE -->
+    <div id="tab-compare">
+      <div class="compare-section">
+        <div class="compare-header">
+          <span class="compare-title-row">Perbandingan Harga Real-time</span>
+          <span style="font-size:12px;color:var(--green);font-weight:600">🟢 Data terkini</span>
+        </div>
+        <table class="compare-table" id="compareTable"></table>
+      </div>
+      <div style="background:var(--green-bg);border:1px solid #9FE1CB;border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:10px;margin-bottom:20px">
+        <span style="font-size:20px">💡</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--green)">Rekomendasi CekDulu</div>
+          <div style="font-size:12px;color:#0F6E56;margin-top:2px">Beli di <strong>Tokopedia</strong> dengan cashback Gopay 10% → harga efektif <strong>Rp 13.364.100</strong> — hemat <strong>Rp 1.483.900</strong> dari harga tertinggi!</div>
+        </div>
+      </div>
+      <div class="products-grid" id="relatedProducts" style="margin-bottom:0"></div>
+    </div>
+
+    <!-- TAB: HISTORY -->
+    <div id="tab-history" style="display:none">
+      <div class="price-history-card">
+        <div class="section-header" style="margin-bottom:8px">
+          <span style="font-size:15px;font-weight:700">Histori Harga 30 Hari</span>
+          <div style="display:flex;gap:6px">
+            <span class="filter-chip active" style="font-size:11px;padding:3px 10px">30H</span>
+            <span class="filter-chip" style="font-size:11px;padding:3px 10px">3B</span>
+            <span class="filter-chip" style="font-size:11px;padding:3px 10px">1T</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:20px;margin-bottom:12px">
+          <div><div style="font-size:11px;color:var(--text3)">Harga terendah</div><div style="font-size:18px;font-weight:800;color:var(--green)">Rp 13.499.000</div></div>
+          <div><div style="font-size:11px;color:var(--text3)">Harga tertinggi</div><div style="font-size:18px;font-weight:800;color:var(--red)">Rp 15.999.000</div></div>
+          <div><div style="font-size:11px;color:var(--text3)">Harga saat ini</div><div style="font-size:18px;font-weight:800;color:var(--accent)">Rp 14.848.000</div></div>
+        </div>
+        <div class="chart-area"><canvas id="priceChart" width="800" height="120"></canvas></div>
+      </div>
+      <div style="background:var(--amber-bg);border:1px solid #FAC775;border-radius:var(--r);padding:14px 16px;display:flex;gap:10px;margin-bottom:20px">
+        <span style="font-size:20px">📊</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--amber)">Analisa Harga</div>
+          <div style="font-size:12px;color:#854F0B;margin-top:2px">Harga saat ini <strong>7.2% di atas harga terendah 30 hari</strong>. Tren menunjukkan kemungkinan penurunan harga di akhir bulan. Disarankan <strong>tunggu 1-2 minggu</strong> untuk harga terbaik.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: WORTH IT -->
+    <div id="tab-worth" style="display:none">
+      <div class="worth-card">
+        <div style="display:flex;align-items:flex-end;gap:16px;margin-bottom:4px">
+          <div class="worth-big-score">87</div>
+          <div style="padding-bottom:8px">
+            <div style="font-size:14px;font-weight:700">Worth It Score</div>
+            <div style="font-size:12px;color:var(--text2)">dari 100 poin · Sangat Direkomendasikan</div>
+          </div>
+        </div>
+        <div style="height:6px;background:var(--border);border-radius:6px;overflow:hidden;margin-bottom:20px">
+          <div style="width:87%;height:100%;background:linear-gradient(90deg,var(--green),#5DCAA5);border-radius:6px;transition:width 1s ease"></div>
+        </div>
+        <div class="worth-breakdown">
+          <div class="worth-item">
+            <div class="worth-item-label">💰 Harga vs Pasar</div>
+            <div class="worth-item-bar"><div class="worth-item-fill" style="width:82%;background:var(--green)"></div></div>
+            <div class="worth-item-val" style="color:var(--green)">82/100</div>
+          </div>
+          <div class="worth-item">
+            <div class="worth-item-label">⭐ Rating Produk</div>
+            <div class="worth-item-bar"><div class="worth-item-fill" style="width:92%;background:#F0A500"></div></div>
+            <div class="worth-item-val" style="color:#BA7517">92/100</div>
+          </div>
+          <div class="worth-item">
+            <div class="worth-item-label">💬 Jumlah Review</div>
+            <div class="worth-item-bar"><div class="worth-item-fill" style="width:95%;background:var(--blue)"></div></div>
+            <div class="worth-item-val" style="color:var(--blue)">95/100</div>
+          </div>
+          <div class="worth-item">
+            <div class="worth-item-label">🏪 Reputasi Seller</div>
+            <div class="worth-item-bar"><div class="worth-item-fill" style="width:88%;background:var(--green)"></div></div>
+            <div class="worth-item-val" style="color:var(--green)">88/100</div>
+          </div>
+          <div class="worth-item">
+            <div class="worth-item-label">🎁 Bonus & Cashback</div>
+            <div class="worth-item-bar"><div class="worth-item-fill" style="width:75%;background:var(--amber)"></div></div>
+            <div class="worth-item-val" style="color:var(--amber)">75/100</div>
+          </div>
+          <div class="worth-item">
+            <div class="worth-item-label">📦 Kecepatan Kirim</div>
+            <div class="worth-item-bar"><div class="worth-item-fill" style="width:90%;background:var(--green)"></div></div>
+            <div class="worth-item-val" style="color:var(--green)">90/100</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: SPEC -->
+    <div id="tab-spec" style="display:none">
+      <div class="compare-section">
+        <div class="compare-header"><span class="compare-title-row">Spesifikasi Lengkap</span></div>
+        <table class="compare-table" id="specTable"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: DEALS -->
+<div class="page" id="page-deals">
+  <div class="main">
+    <div style="margin-bottom:20px">
+      <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.4px">⚡ Flash Deal & Promo</h2>
+      <p style="font-size:13px;color:var(--text2);margin-top:2px">Deal terbaik dikurasi otomatis dari 5 marketplace setiap jam</p>
+    </div>
+    <div class="filter-bar">
+      <span class="filter-chip active">Semua</span>
+      <span class="filter-chip">📱 Elektronik</span>
+      <span class="filter-chip">👗 Fashion</span>
+      <span class="filter-chip">🏠 Rumah</span>
+      <span class="filter-chip">🎮 Gaming</span>
+      <span class="filter-chip">🧴 Beauty</span>
+    </div>
+    <div class="deals-grid" id="allDeals"></div>
+    <div style="text-align:center;padding:20px 0">
+      <button class="btn-sm btn-outline" style="padding:10px 28px;font-size:14px" onclick="showToast('Memuat lebih banyak deals... 🔄')">Muat Lebih Banyak</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: ARTIKEL -->
+<div class="page" id="page-artikel">
+  <div class="main">
+    <div style="margin-bottom:20px">
+      <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.4px">📖 Artikel & Tips Belanja</h2>
+      <p style="font-size:13px;color:var(--text2);margin-top:2px">Panduan belanja cerdas, review produk, dan tips hemat</p>
+    </div>
+    <div class="filter-bar">
+      <span class="filter-chip active">Semua</span>
+      <span class="filter-chip">Review</span>
+      <span class="filter-chip">Tips Hemat</span>
+      <span class="filter-chip">Perbandingan</span>
+      <span class="filter-chip">Best Buy</span>
+    </div>
+    <div class="articles-grid" id="artikelGrid"></div>
+  </div>
+</div>
+
+<!-- PAGE: ADMIN -->
+<div class="page" id="page-admin">
+  <div style="background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:18px;font-weight:800;letter-spacing:-0.3px">Admin Dashboard</div>
+      <div style="font-size:12px;color:var(--text3)">CekDulu Control Panel · Superadmin</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-sm btn-outline" onclick="showToast('Scraper dijalankan! ⚙️')">▶ Jalankan Scraper</button>
+      <button class="btn-sm btn-primary" onclick="showToast('Sync berhasil! ✅')">🔄 Sync Data</button>
+    </div>
+  </div>
+  <div class="main">
+    <!-- STATS -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">Total Produk</div>
+        <div style="font-size:22px;font-weight:800;letter-spacing:-0.5px">2.4Jt</div>
+        <div style="font-size:11px;color:var(--green);margin-top:2px">↑ +12.4% bulan ini</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">Klik Affiliate</div>
+        <div style="font-size:22px;font-weight:800;letter-spacing:-0.5px">84.2rb</div>
+        <div style="font-size:11px;color:var(--green);margin-top:2px">↑ +8.1% minggu ini</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">Estimasi Komisi</div>
+        <div style="font-size:22px;font-weight:800;letter-spacing:-0.5px">Rp 12.8Jt</div>
+        <div style="font-size:11px;color:var(--green);margin-top:2px">↑ +21.3% bulan ini</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">Queue Scraping</div>
+        <div style="font-size:22px;font-weight:800;letter-spacing:-0.5px">1.2rb</div>
+        <div style="font-size:11px;color:var(--amber);margin-top:2px">⏳ Aktif berjalan</div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="section-header"><span class="section-title">Quick Actions</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:24px">
+      <button style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center;cursor:pointer;font-family:inherit;transition:all 0.15s" onclick="showToast('Membuka CRUD Produk...')">
+        <div style="font-size:24px;margin-bottom:6px">📦</div>
+        <div style="font-size:12px;font-weight:600">Kelola Produk</div>
+      </button>
+      <button style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center;cursor:pointer;font-family:inherit;transition:all 0.15s" onclick="showToast('Membuka Kategori...')">
+        <div style="font-size:24px;margin-bottom:6px">🏷️</div>
+        <div style="font-size:12px;font-weight:600">Kategori</div>
+      </button>
+      <button style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center;cursor:pointer;font-family:inherit;transition:all 0.15s" onclick="showToast('Membuka Marketplace...')">
+        <div style="font-size:24px;margin-bottom:6px">🛒</div>
+        <div style="font-size:12px;font-weight:600">Marketplace</div>
+      </button>
+      <button style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center;cursor:pointer;font-family:inherit;transition:all 0.15s" onclick="showToast('Membuka Artikel...')">
+        <div style="font-size:24px;margin-bottom:6px">📝</div>
+        <div style="font-size:12px;font-weight:600">Artikel SEO</div>
+      </button>
+      <button style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center;cursor:pointer;font-family:inherit;transition:all 0.15s" onclick="showToast('Membuka Deals...')">
+        <div style="font-size:24px;margin-bottom:6px">⚡</div>
+        <div style="font-size:12px;font-weight:600">Deals</div>
+      </button>
+      <button style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center;cursor:pointer;font-family:inherit;transition:all 0.15s" onclick="showToast('Membuka Affiliate...')">
+        <div style="font-size:24px;margin-bottom:6px">🔗</div>
+        <div style="font-size:12px;font-weight:600">Affiliate Link</div>
+      </button>
+      <button style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center;cursor:pointer;font-family:inherit;transition:all 0.15s" onclick="showToast('Monitoring scraper...')">
+        <div style="font-size:24px;margin-bottom:6px">🕷️</div>
+        <div style="font-size:12px;font-weight:600">Scraper Monitor</div>
+      </button>
+      <button style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center;cursor:pointer;font-family:inherit;transition:all 0.15s" onclick="showToast('Membuka Analytics...')">
+        <div style="font-size:24px;margin-bottom:6px">📊</div>
+        <div style="font-size:12px;font-weight:600">Analytics</div>
+      </button>
+    </div>
+
+    <!-- SCRAPER STATUS -->
+    <div class="section-header"><span class="section-title">Status Scraper Real-time</span></div>
+    <div class="compare-section" style="margin-bottom:24px">
+      <table class="compare-table">
+        <thead><tr><th>Marketplace</th><th>Status</th><th>Produk Scraped</th><th>Rate</th><th>Error</th><th>Aksi</th></tr></thead>
+        <tbody id="scraperTable"></tbody>
+      </table>
+    </div>
+
+    <!-- RECENT ACTIVITY -->
+    <div class="section-header"><span class="section-title">Aktivitas Terkini</span></div>
+    <div class="trending-list" id="adminActivity"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const PRODUCTS = [
+  {id:1,name:'iPhone 15 128GB',emoji:'📱',price:14848000,orig:16999000,rating:4.9,sold:'12.4rb',badge:'hot',category:'hp',worthScore:87,shops:['shopee','tokped','lazada']},
+  {id:2,name:'Samsung Galaxy A55 5G',emoji:'📱',price:4999000,orig:5999000,rating:4.8,sold:'8.2rb',badge:'deal',category:'hp',worthScore:92,shops:['shopee','tokped']},
+  {id:3,name:'Xiaomi Redmi Note 13 Pro',emoji:'📱',price:2999000,orig:3499000,rating:4.7,sold:'15.6rb',badge:'hot',category:'hp',worthScore:95,shops:['shopee','lazada','blibli']},
+  {id:4,name:'MacBook Air M2 8GB',emoji:'💻',price:13499000,orig:15999000,rating:4.9,sold:'3.1rb',badge:'deal',category:'laptop',worthScore:89,shops:['shopee','tokped','lazada']},
+  {id:5,name:'Sony WH-1000XM5',emoji:'🎧',price:3799000,orig:5299000,rating:4.8,sold:'6.7rb',badge:'hot',category:'audio',worthScore:91,shops:['shopee','tokped']},
+  {id:6,name:'Dyson V12 Detect Slim',emoji:'🌀',price:7999000,orig:9999000,rating:4.7,sold:'2.4rb',badge:'new',category:'rumah',worthScore:85,shops:['tokped','lazada','blibli']},
+  {id:7,name:'Adidas Ultraboost 22',emoji:'👟',price:1299000,orig:2099000,rating:4.6,sold:'22.1rb',badge:'deal',category:'fashion',worthScore:88,shops:['shopee','tokped']},
+  {id:8,name:'ASUS ROG Ally Gaming PC',emoji:'🎮',price:8499000,orig:9999000,rating:4.8,sold:'1.8rb',badge:'new',category:'laptop',worthScore:90,shops:['tokped','lazada','blibli']},
+];
+const DEALS=[
+  {emoji:'📱',name:'iPhone 15 Pro Max 256GB',discount:'12%',save:'Rp 2.1Jt',timer:'02:14:33',market:'Shopee'},
+  {emoji:'💻',name:'ASUS Zenbook 14 OLED',discount:'25%',save:'Rp 3.5Jt',timer:'05:42:17',market:'Tokopedia'},
+  {emoji:'🎧',name:'Bose QuietComfort 45',discount:'35%',save:'Rp 2.8Jt',timer:'01:08:55',market:'Lazada'},
+  {emoji:'⌚',name:'Samsung Galaxy Watch 6',discount:'18%',save:'Rp 720rb',timer:'03:55:12',market:'Blibli'},
+  {emoji:'🏠',name:'Xiaomi Robot Vacuum S10+',discount:'40%',save:'Rp 2.4Jt',timer:'00:22:08',market:'Tokopedia'},
+  {emoji:'🖥️',name:'LG OLED 55" C3 4K',discount:'15%',save:'Rp 2.9Jt',timer:'06:12:45',market:'Blibli'},
+];
+const MARKET_COLORS={shopee:'#EE4D2D',tokped:'#00AA5B',lazada:'#0F146D',blibli:'#005FCC',tiktok:'#010101'};
+const MARKET_LABELS={shopee:'Shopee',tokped:'Tokopedia',lazada:'Lazada',blibli:'Blibli',tiktok:'TikTok'};
+const ARTICLES=[
+  {emoji:'📱',tag:'Review',title:'iPhone 15 vs Samsung S24: Mana yang Lebih Worth It di 2025?',date:'22 Mei 2025',read:'8 menit'},
+  {emoji:'💰',tag:'Tips Hemat',title:'10 Cara Hemat Belanja Online yang Jarang Diketahui',date:'21 Mei 2025',read:'5 menit'},
+  {emoji:'🎧',tag:'Best Buy',title:'5 TWS Earbuds Terbaik Budget Rp 300rb-800rb',date:'20 Mei 2025',read:'6 menit'},
+  {emoji:'💻',tag:'Perbandingan',title:'MacBook Air M2 vs ASUS Zenbook: Pilih Mana?',date:'19 Mei 2025',read:'10 menit'},
+  {emoji:'🛒',tag:'Tips',title:'Kapan Waktu Terbaik Belanja di Shopee & Tokopedia?',date:'18 Mei 2025',read:'4 menit'},
+  {emoji:'📊',tag:'Analisa',title:'Harga Smartphone 2025: Tren Naik atau Turun?',date:'17 Mei 2025',read:'7 menit'},
+];
+const TRENDING=[
+  {emoji:'📱',name:'iPhone 15 128GB',price:'Rp 14.848.000',change:'-3.2%',down:true},
+  {emoji:'💻',name:'MacBook Air M2',price:'Rp 13.499.000',change:'-5.1%',down:true},
+  {emoji:'🎧',name:'Sony WH-1000XM5',price:'Rp 3.799.000',change:'-28%',down:true},
+  {emoji:'📱',name:'Samsung Galaxy S24',price:'Rp 12.299.000',change:'+2.1%',down:false},
+  {emoji:'⌚',name:'Apple Watch Series 9',price:'Rp 6.499.000',change:'-8.4%',down:true},
+];
+const COMPARE_DATA=[
+  {market:'shopee',price:14848000,cashback:'10% ShopeePay',rating:4.9,review:'12.4rb',stock:'ok',ship:'Bebas Ongkir'},
+  {market:'tokped',price:15200000,cashback:'Cashback Gopay',rating:4.8,review:'8.1rb',stock:'ok',ship:'Bebas Ongkir'},
+  {market:'lazada',price:15499000,cashback:null,rating:4.7,review:'3.2rb',stock:'ok',ship:'Gratis Ongkir'},
+  {market:'blibli',price:16200000,cashback:null,rating:4.6,review:'1.8rb',stock:'low',ship:'Regular'},
+  {market:'tiktok',price:14999000,cashback:'Koin TikTok',rating:4.8,review:'5.6rb',stock:'ok',ship:'Bebas Ongkir'},
+];
+const SPEC_DATA=[
+  ['Layar','6.1 inch Super Retina XDR'],['Chip','Apple A16 Bionic'],['RAM','6 GB'],['Storage','128 GB'],
+  ['Kamera Utama','48 MP + 12 MP + 12 MP'],['Kamera Depan','12 MP'],['Baterai','3877 mAh'],['OS','iOS 17'],
+  ['5G','Ya'],['Garansi','1 Tahun Apple Indonesia'],['Warna','Pink, Yellow, Green, Blue, Black'],
+];
+const SCRAPER_DATA=[
+  {market:'Shopee',emoji:'🟢',status:'Aktif',scraped:'284.2rb',rate:'1.2rb/mnt',error:'0'},
+  {market:'Tokopedia',emoji:'🟢',status:'Aktif',scraped:'198.7rb',rate:'980/mnt',error:'2'},
+  {market:'Lazada',emoji:'🟡',status:'Antrian',scraped:'142.1rb',rate:'0',error:'0'},
+  {market:'Blibli',emoji:'🟢',status:'Aktif',scraped:'89.4rb',rate:'640/mnt',error:'0'},
+  {market:'Bukalapak',emoji:'⚫',status:'Nonaktif',scraped:'67.2rb',rate:'0',error:'0'},
+];
+
+function formatRp(n){return'Rp '+n.toLocaleString('id-ID')}
+
+function renderProducts(filter='all'){
+  const grid=document.getElementById('productsGrid');
+  const filtered=filter==='all'?PRODUCTS:PRODUCTS.filter(p=>p.category===filter);
+  grid.innerHTML=filtered.map(p=>`
+    <div class="product-card" onclick="openProduct(${p.id})">
+      <div class="product-img">${p.emoji}<span class="product-badge badge-${p.badge}">${p.badge==='hot'?'🔥 Hot':p.badge==='deal'?'✅ Deal':'🆕 Baru'}</span></div>
+      <div class="product-info">
+        <div class="product-name">${p.name}</div>
+        <div><span class="product-price">${formatRp(p.price)}</span><span class="product-price-orig">${formatRp(p.orig)}</span></div>
+        <div class="product-meta">
+          <span class="product-rating"><span class="product-rating-star">★</span>${p.rating}</span>
+          <span class="product-sold">${p.sold} terjual</span>
+        </div>
+        <div class="product-shops">${p.shops.map(s=>`<span class="shop-pill" style="background:${MARKET_COLORS[s]}20;color:${MARKET_COLORS[s]}">${MARKET_LABELS[s]}</span>`).join('')}</div>
+        <div class="worth-bar">
+          <div class="worth-label"><span class="worth-text">Worth It Score</span><span class="worth-score">${p.worthScore}/100</span></div>
+          <div class="worth-track"><div class="worth-fill" style="width:${p.worthScore}%"></div></div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderTrending(){
+  document.getElementById('trendingList').innerHTML=TRENDING.map((t,i)=>`
+    <div class="trending-item" onclick="openProduct(1)">
+      <span class="trending-rank ${i<3?'top':''}">${i+1}</span>
+      <span class="trending-emoji">${t.emoji}</span>
+      <div class="trending-info"><div class="trending-name">${t.name}</div><div class="trending-price">${t.price}</div></div>
+      <span class="trending-change ${t.down?'change-down':'change-up'}">${t.change}</span>
+    </div>`).join('');
+}
+
+function renderDeals(id,count=4){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.innerHTML=DEALS.slice(0,count).map(d=>`
+    <div class="deal-card" onclick="showPage('deals');setActiveNavById('nav-deals')">
+      <div class="deal-emoji">${d.emoji}</div>
+      <div class="deal-info">
+        <div class="deal-name">${d.name}</div>
+        <div class="deal-discount">${d.discount} OFF</div>
+        <div class="deal-save">Hemat ${d.save} · ${d.market}</div>
+        <div class="deal-timer"><span class="deal-timer-dot"></span>Sisa ${d.timer}</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderAllDeals(){
+  const el=document.getElementById('allDeals');
+  if(!el)return;
+  const all=[...DEALS,...DEALS].slice(0,12);
+  el.innerHTML=all.map(d=>`
+    <div class="deal-card" onclick="showToast('Membuka ${d.name}... 🔗')">
+      <div class="deal-emoji">${d.emoji}</div>
+      <div class="deal-info">
+        <div class="deal-name">${d.name}</div>
+        <div class="deal-discount">${d.discount} OFF</div>
+        <div class="deal-save">Hemat ${d.save} · ${d.market}</div>
+        <div class="deal-timer"><span class="deal-timer-dot"></span>Sisa ${d.timer}</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderArticles(){
+  const el=document.getElementById('artikelGrid');
+  if(!el)return;
+  el.innerHTML=ARTICLES.map(a=>`
+    <div class="article-card" onclick="showToast('Membuka artikel... 📖')">
+      <div class="article-thumb">${a.emoji}</div>
+      <div class="article-body">
+        <div class="article-tag">${a.tag}</div>
+        <div class="article-title">${a.title}</div>
+        <div class="article-meta">${a.date} · ${a.read} baca</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderCompareTable(){
+  const el=document.getElementById('compareTable');
+  if(!el)return;
+  const minPrice=Math.min(...COMPARE_DATA.map(d=>d.price));
+  el.innerHTML=`<thead><tr><th>Marketplace</th><th>Harga</th><th>Cashback</th><th>Rating</th><th>Review</th><th>Stok</th><th>Aksi</th></tr></thead><tbody>`+
+    COMPARE_DATA.map(d=>{
+      const cheapest=d.price===minPrice;
+      return`<tr>
+        <td><div class="market-logo"><div class="market-icon" style="background:${MARKET_COLORS[d.market]}">${MARKET_LABELS[d.market].slice(0,2)}</div>${MARKET_LABELS[d.market]}</div></td>
+        <td class="price-cell ${cheapest?'price-cheapest':''}">${formatRp(d.price)}${cheapest?'<span class="price-tag-cheapest">✓ Termurah</span>':''}</td>
+        <td>${d.cashback?`<span class="cashback-tag">${d.cashback}</span>`:'<span style="color:var(--text3)">—</span>'}</td>
+        <td><div class="rating-cell"><span style="color:#F0A500">★</span>${d.rating}</div></td>
+        <td>${d.review}</td>
+        <td><span class="${d.stock==='ok'?'stock-ok':'stock-low'}">${d.stock==='ok'?'✓ Tersedia':'⚠ Hampir Habis'}</span></td>
+        <td><button class="btn-shop" onclick="trackAffiliate('${d.market}')">Beli →</button></td>
+      </tr>`;}).join('')+'</tbody>';
+}
+
+function renderSpecTable(){
+  const el=document.getElementById('specTable');
+  if(!el)return;
+  el.innerHTML='<thead><tr><th>Spesifikasi</th><th>Detail</th></tr></thead><tbody>'+
+    SPEC_DATA.map(s=>`<tr><td style="color:var(--text2);font-weight:500">${s[0]}</td><td style="font-weight:600">${s[1]}</td></tr>`).join('')+'</tbody>';
+}
+
+function renderScraperTable(){
+  const el=document.getElementById('scraperTable');
+  if(!el)return;
+  el.innerHTML=SCRAPER_DATA.map(s=>`
+    <tr>
+      <td style="font-weight:600">${s.emoji} ${s.market}</td>
+      <td><span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:${s.status==='Aktif'?'var(--green-bg)':s.status==='Antrian'?'var(--amber-bg)':'var(--surface2)'};color:${s.status==='Aktif'?'var(--green)':s.status==='Antrian'?'var(--amber)':'var(--text3)'}">${s.status}</span></td>
+      <td>${s.scraped}</td>
+      <td style="font-size:12px;color:var(--text2)">${s.rate||'—'}</td>
+      <td style="color:${s.error!=='0'?'var(--red)':'var(--green)';font-weight:600">${s.error}</td>
+      <td><button class="btn-sm btn-outline" style="font-size:11px;padding:4px 10px" onclick="showToast('${s.market} scraper dijalankan!')">Jalankan</button></td>
+    </tr>`).join('');
+}
+
+function renderAdminActivity(){
+  const activities=[
+    {emoji:'🕷️',text:'Shopee scraper: 284rb produk di-update',time:'2 mnt lalu'},
+    {emoji:'💰',text:'Affiliate click: iPhone 15 → Shopee (+Rp 14.8rb)',time:'5 mnt lalu'},
+    {emoji:'📉',text:'Price drop: Sony WH-1000XM5 -28% di Tokopedia',time:'12 mnt lalu'},
+    {emoji:'🔗',text:'New deal agregated: ASUS ROG 25% off di Blibli',time:'18 mnt lalu'},
+    {emoji:'✅',text:'Product match: Xiaomi Redmi Note 13 → 3 marketplace',time:'24 mnt lalu'},
+  ];
+  document.getElementById('adminActivity').innerHTML=activities.map(a=>`
+    <div class="trending-item">
+      <span style="font-size:20px">${a.emoji}</span>
+      <div style="flex:1"><div style="font-size:13px;font-weight:500">${a.text}</div></div>
+      <span style="font-size:11px;color:var(--text3)">${a.time}</span>
+    </div>`).join('');
+}
+
+function drawPriceChart(){
+  const canvas=document.getElementById('priceChart');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  canvas.width=canvas.parentElement.offsetWidth||700;
+  const W=canvas.width,H=120;
+  const prices=[15999,15500,15200,14999,15100,14800,14999,15200,14700,14848,14500,15000,14848,14600,14900,14800,14700,14848,15100,14900,14700,14600,14500,14848,15000,14700,14600,14500,14700,14848];
+  const mn=Math.min(...prices),mx=Math.max(...prices),rng=mx-mn;
+  const pts=prices.map((p,i)=>({x:i/(prices.length-1)*(W-20)+10,y:H-10-(p-mn)/rng*(H-20)}));
+  ctx.clearRect(0,0,W,H);
+  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+  pts.forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.strokeStyle='#E8431A';ctx.lineWidth=2;ctx.stroke();
+  const grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'rgba(232,67,26,0.15)');grad.addColorStop(1,'rgba(232,67,26,0)');
+  ctx.lineTo(pts[pts.length-1].x,H);ctx.lineTo(pts[0].x,H);ctx.closePath();
+  ctx.fillStyle=grad;ctx.fill();
+  const minPt=pts[prices.indexOf(mn)],maxPt=pts[prices.indexOf(mx)];
+  ctx.beginPath();ctx.arc(minPt.x,minPt.y,4,0,Math.PI*2);ctx.fillStyle='#1D9E75';ctx.fill();
+  ctx.beginPath();ctx.arc(maxPt.x,maxPt.y,4,0,Math.PI*2);ctx.fillStyle='#A32D2D';ctx.fill();
+}
+
+function openProduct(id){
+  document.getElementById('compareTitle').textContent=PRODUCTS.find(p=>p.id===id)?.name||'Produk';
+  showPage('compare');
+  setActiveNavById('nav-compare');
+  setTimeout(()=>{renderCompareTable();renderSpecTable();drawPriceChart();},50);
+}
+
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(name==='compare'){setTimeout(()=>{renderCompareTable();renderSpecTable();drawPriceChart();},50);}
+  if(name==='deals')renderAllDeals();
+  if(name==='artikel')renderArticles();
+  if(name==='admin'){renderScraperTable();renderAdminActivity();}
+}
+
+function setActiveNav(el){
+  document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+}
+function setActiveNavById(id){}
+
+function switchTab(el,tabId){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['tab-compare','tab-history','tab-worth','tab-spec'].forEach(t=>{
+    const el2=document.getElementById(t);if(el2)el2.style.display='none';
+  });
+  const shown=document.getElementById(tabId);
+  if(shown)shown.style.display='block';
+  if(tabId==='tab-history')setTimeout(drawPriceChart,50);
+}
+
+function filterCategory(el,cat){
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderProducts(cat);
+}
+
+function fillSearch(text){
+  document.getElementById('searchInput').value=text;
+  showToast('Mencari "'+text+'"... 🔍');
+}
+
+function doSearch(){
+  const q=document.getElementById('searchInput').value;
+  if(q){showToast('Mencari "'+q+'"... 🔍');setTimeout(()=>openProduct(1),400);}
+}
+
+function handleSearch(v){}
+
+function trackAffiliate(market){
+  showToast('Redirect ke '+MARKET_LABELS[market]+'... 🔗');
+}
+
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// INIT
+renderProducts();
+renderTrending();
+renderDeals('homeDeals',4);
+</script>
+</body>
+</html>

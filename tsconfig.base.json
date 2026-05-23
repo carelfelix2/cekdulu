@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@cekdulu/shared": ["packages/shared/src/index.ts"],
+      "@cekdulu/shared/*": ["packages/shared/src/*"],
+      "@cekdulu/database": ["packages/database/src/index.ts"],
+      "@cekdulu/database/*": ["packages/database/src/*"]
+    }
+  }
+}
