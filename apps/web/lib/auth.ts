@@ -37,17 +37,40 @@ export type AuthPayload = {
   refreshToken: string;
 };
 
+function resolveApiBase() {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+
+  if (typeof window !== 'undefined') {
+    return `${window.location.protocol}//${window.location.hostname}:4000/api`;
+  }
+
+  return 'http://localhost:4000/api';
+}
+
 // Auth API functions
 export async function login(credentials: LoginInput): Promise<ApiResponse<AuthPayload>> {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(credentials)
-  });
+  const apiBase = resolveApiBase();
+  let response: Response;
+
+  try {
+    response = await fetch(`${apiBase}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials)
+    });
+  } catch {
+    throw new Error(`Tidak dapat terhubung ke API (${apiBase}). Cek backend API dan konfigurasi NEXT_PUBLIC_API_URL.`);
+  }
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Login gagal');
+    try {
+      const error = await response.json();
+      throw new Error(error.message || 'Login gagal');
+    } catch {
+      throw new Error('Login gagal');
+    }
   }
 
   const data = await response.json();
@@ -60,16 +83,26 @@ export async function login(credentials: LoginInput): Promise<ApiResponse<AuthPa
 
 export async function register(input: RegisterInput): Promise<ApiResponse<AuthPayload>> {
   const { confirmPassword, ...data } = input;
+  const apiBase = resolveApiBase();
+  let response: Response;
 
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'}/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
+  try {
+    response = await fetch(`${apiBase}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+  } catch {
+    throw new Error(`Tidak dapat terhubung ke API (${apiBase}). Cek backend API dan konfigurasi NEXT_PUBLIC_API_URL.`);
+  }
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Registrasi gagal');
+    try {
+      const error = await response.json();
+      throw new Error(error.message || 'Registrasi gagal');
+    } catch {
+      throw new Error('Registrasi gagal');
+    }
   }
 
   const responseData = await response.json();
