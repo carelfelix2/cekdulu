@@ -1,3 +1,30 @@
+import { Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { ScrapedProductsService } from './scraped-products.service';
+
+@Controller('scraped-products')
+export class ScrapedProductsController {
+  constructor(private readonly service: ScrapedProductsService) {}
+
+  @Get()
+  list(@Query('q') q?: string, @Query('marketplaceId') marketplaceId?: string) {
+    return this.service.list({ keyword: q, marketplaceId });
+  }
+
+  @Patch(':id/approve')
+  approve(@Param('id') id: string) {
+    return this.service.approve(id);
+  }
+
+  @Patch(':id/reject')
+  reject(@Param('id') id: string) {
+    return this.service.reject(id);
+  }
+
+  @Post(':id/convert')
+  convert(@Param('id') id: string) {
+    return this.service.convertToProduct(id);
+  }
+}
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ScrapedProductQueryDto } from './dto/scraped-product-query.dto';
 import { ScrapedProductsService } from './scraped-products.service';

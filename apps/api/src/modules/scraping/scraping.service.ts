@@ -1,3 +1,39 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../common/prisma.service';
+import type { RunScrapingDto } from './dto/run-scraping.dto';
+
+@Injectable()
+export class ScrapingService {
+  constructor(private readonly prismaService: PrismaService) {}
+
+  private get prisma() {
+    return this.prismaService.client;
+  }
+
+  async run(dto: RunScrapingDto) {
+    // Create a scraping job record and return it.
+    const job = await this.prisma.scrapingJob.create({
+      data: {
+        marketplaceId: dto.marketplaceId ?? (await this.prisma.marketplace.findFirst())!.id,
+        keyword: dto.keyword,
+        limit: dto.limit,
+        status: 'QUEUED'
+      }
+    });
+
+    // TODO: integrate with actual scraper worker or external API (SCRAPER_API_BASE_URL)
+
+    return job;
+  }
+
+  listLogs() {
+    return this.prisma.scrapeRun.findMany({
+      orderBy: { startedAt: 'desc' },
+      take: 100,
+      include: { marketplace: true }
+    });
+  }
+}
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import type { RunScrapeDto } from './dto/run-scrape.dto';
