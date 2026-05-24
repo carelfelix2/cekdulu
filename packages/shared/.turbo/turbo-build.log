@@ -1,0 +1,4 @@
+
+> @cekdulu/shared@0.1.0 build C:\laragon\www\cekdulu\packages\shared
+> tsc -p tsconfig.json
+

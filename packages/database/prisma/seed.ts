@@ -24,6 +24,21 @@ async function main() {
     });
   }
 
+  const marketplaces = [
+    { slug: 'shopee', name: 'Shopee', displayName: 'Shopee', color: '#EE1D1D', logoUrl: 'https://cdn-icons-png.flaticon.com/512/3541/3541368.png' },
+    { slug: 'tokopedia', name: 'Tokopedia', displayName: 'Tokopedia', color: '#00AA00', logoUrl: 'https://cdn-icons-png.flaticon.com/512/9568/9568544.png' },
+    { slug: 'lazada', name: 'Lazada', displayName: 'Lazada', color: '#0A4FB7', logoUrl: 'https://cdn-icons-png.flaticon.com/512/7201/7201432.png' },
+    { slug: 'blibli', name: 'Blibli', displayName: 'Blibli', color: '#FF6600', logoUrl: 'https://cdn-icons-png.flaticon.com/512/1987/1987672.png' },
+  ];
+
+  for (const marketplace of marketplaces) {
+    await prisma.marketplace.upsert({
+      where: { slug: marketplace.slug },
+      update: { name: marketplace.name },
+      create: marketplace
+    });
+  }
+
   const roles = [
     { key: 'USER', name: 'User', permissions: [] },
     { key: 'SUPER_ADMIN', name: 'Super Admin', permissions: permissions.map((permission) => permission.key) },

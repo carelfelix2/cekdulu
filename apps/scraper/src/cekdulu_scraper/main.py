@@ -34,7 +34,6 @@ async def process_message(message: Any, browser) -> None:
         marketplace = MarketplaceSlug(payload['marketplace'])
         worker_cls = WORKER_MAP[marketplace]
         worker = worker_cls(browser)
-        records = await worker.scrape(payload)
         groups = group_products(records)
         duplicates = find_duplicates(records)
         print(json.dumps({
@@ -43,8 +42,29 @@ async def process_message(message: Any, browser) -> None:
             'groups': len(groups),
             'duplicates': len(duplicates)
         }))
+        try:
+                payload = json.loads(message.body.decode())
+                print(f"DEBUG: Message payload: {json.dumps(payload)}")
+                marketplace = MarketplaceSlug(payload['marketplace'])
+                worker_cls = WORKER_MAP[marketplace]
+                worker = worker_cls(browser)
+                records = await worker.scrape(payload)
+                groups = group_products(records)
+                duplicates = find_duplicates(records)
+                print(json.dumps({
+                    'marketplace': marketplace.value,
+async def process_message(message: Any, browser) -> None:
+                    'records': len(records),
+                    'groups': len(groups),
+                    'duplicates': len(duplicates)
+                }))
+        except Exception as e:
+            print(f"ERROR: Failed to process message: {e}")
+            print(f"Message body: {message.body}")
+            raise
 
 
+async def process_message(message: Any, browser) -> None:
 async def run_consumer() -> None:
     await queue_client.connect()
     async with async_playwright() as p:

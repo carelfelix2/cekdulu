@@ -10,5 +10,9 @@ export class RunScrapingDto {
 
   @IsOptional()
   @IsString()
-  marketplaceId?: string;
+  marketplace?: string;
+
+  @IsOptional()
+  @IsString()
+  strategy?: string;
 }

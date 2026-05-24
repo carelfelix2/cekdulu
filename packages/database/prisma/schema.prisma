@@ -630,6 +630,7 @@ model ScrapedProduct {
   marketplaceId    String
   keyword          String
   source           String?
+  rawData          Json?
   scrapedAt        DateTime             @default(now())
   status           ScrapedProductStatus @default(PENDING)
   matchedProductId  String?

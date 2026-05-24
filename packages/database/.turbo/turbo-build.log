@@ -1,0 +1,4 @@
+
+> @cekdulu/database@0.1.0 build C:\laragon\www\cekdulu\packages\database
+> tsc -p tsconfig.json
+
