@@ -11,6 +11,7 @@ export function SiteHeader() {
   const { user, isAuthenticated, logout, isLoading } = useAuth();
   const router = useRouter();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const isAdmin = (user?.roles ?? []).some((role) => role === 'ADMIN' || role === 'SUPER_ADMIN');
 
   const handleLogout = () => {
     logout();
@@ -38,7 +39,14 @@ export function SiteHeader() {
           <Link className="rounded-full px-4 py-2 text-sm font-medium text-slate-700 hover:bg-white hover:shadow-sm" href="/compare/iphone-15-128gb">Compare</Link>
           <Link className="rounded-full px-4 py-2 text-sm font-medium text-slate-700 hover:bg-white hover:shadow-sm" href="/deals">Deals</Link>
           <Link className="rounded-full px-4 py-2 text-sm font-medium text-slate-700 hover:bg-white hover:shadow-sm" href="/articles/iphone-vs-samsung-worth-it">Artikel</Link>
-          <Link className="rounded-full px-4 py-2 text-sm font-medium text-slate-700 hover:bg-white hover:shadow-sm" href="/admin">Admin</Link>
+          {!isLoading && isAuthenticated ? (
+            <>
+              <Link className="rounded-full px-4 py-2 text-sm font-medium text-slate-700 hover:bg-white hover:shadow-sm" href="/dashboard">Dashboard</Link>
+              {isAdmin && (
+                <Link className="rounded-full px-4 py-2 text-sm font-medium text-slate-700 hover:bg-white hover:shadow-sm" href="/admin">Admin</Link>
+              )}
+            </>
+          ) : null}
         </nav>
 
         <div className="flex items-center gap-2">
@@ -70,8 +78,18 @@ export function SiteHeader() {
                     className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                   >
                     <User className="h-4 w-4" />
-                    Profil
+                    Dashboard
                   </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setShowProfileMenu(false)}
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Admin Panel
+                    </Link>
+                  )}
                   <Link
                     href="/settings"
                     onClick={() => setShowProfileMenu(false)}
