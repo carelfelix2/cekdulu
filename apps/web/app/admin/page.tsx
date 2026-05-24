@@ -36,6 +36,15 @@ import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/hooks/use-auth';
 
 type AnyRecord = Record<string, any>;
+type CreateRecordType = 'product' | 'marketplace' | 'affiliate' | 'article' | 'price';
+type CreateField = {
+  key: string;
+  label: string;
+  placeholder: string;
+  type?: string;
+  multiline?: boolean;
+};
+type CreateFormConfig = Record<CreateRecordType, { title: string; description: string; fields: CreateField[] }>;
 
 const formatCurrency = (value?: number | string | null) => {
   const amount = Number(value ?? 0);
@@ -72,6 +81,10 @@ export default function AdminPage() {
   const [scrapeLimit, setScrapeLimit] = useState('10');
   const [scrapeMarketplaceId, setScrapeMarketplaceId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createModalType, setCreateModalType] = useState<CreateRecordType | null>(null);
+  const [createForm, setCreateForm] = useState<Record<string, string>>({});
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
 
   const overviewQuery = useQuery({
     queryKey: ['admin-overview'],
@@ -100,68 +113,155 @@ export default function AdminPage() {
     }
   };
 
-  const createMarketplace = async () => {
-    const name = window.prompt('Marketplace name');
-    if (!name) return;
-    const slug = window.prompt('Slug', name.toLowerCase().replace(/\s+/g, '-'));
-    if (!slug) return;
-    const baseUrl = window.prompt('Base URL', 'https://example.com') ?? undefined;
-    await apiFetch('/marketplaces', {
-      method: 'POST',
-      body: JSON.stringify({ name, slug, displayName: name, baseUrl, isActive: true })
-    });
-    await refresh();
+  const createFormConfig: CreateFormConfig = {
+    product: {
+      title: 'Create product',
+      description: 'Tambahkan produk baru ke katalog utama.',
+      fields: [
+        { key: 'name', label: 'Product name', placeholder: 'Contoh: iPhone 15 128GB' },
+        { key: 'slug', label: 'Slug', placeholder: 'iphone-15-128gb' }
+      ]
+    },
+    marketplace: {
+      title: 'Create marketplace',
+      description: 'Tambahkan marketplace baru untuk listing harga.',
+      fields: [
+        { key: 'name', label: 'Marketplace name', placeholder: 'Contoh: Shopee' },
+        { key: 'slug', label: 'Slug', placeholder: 'shopee' },
+        { key: 'baseUrl', label: 'Base URL', placeholder: 'https://example.com' }
+      ]
+    },
+    affiliate: {
+      title: 'Create affiliate link',
+      description: 'Hubungkan product ke marketplace melalui link affiliate.',
+      fields: [
+        { key: 'productId', label: 'Product ID', placeholder: 'cuid product' },
+        { key: 'marketplaceId', label: 'Marketplace ID', placeholder: 'cuid marketplace' },
+        { key: 'url', label: 'Affiliate URL', placeholder: 'https://...' },
+        { key: 'shortCode', label: 'Short code', placeholder: 'IPH15-SHP' },
+        { key: 'trackingCode', label: 'Tracking code', placeholder: 'trk_admin_001' }
+      ]
+    },
+    article: {
+      title: 'Create article',
+      description: 'Buat draft artikel baru untuk konten SEO.',
+      fields: [
+        { key: 'title', label: 'Article title', placeholder: 'Judul artikel' },
+        { key: 'slug', label: 'Slug', placeholder: 'judul-artikel' },
+        { key: 'content', label: 'Content', placeholder: 'Tulis konten draft di sini...', multiline: true }
+      ]
+    },
+    price: {
+      title: 'Create product price',
+      description: 'Tambahkan snapshot harga produk.',
+      fields: [
+        { key: 'productId', label: 'Product ID', placeholder: 'cuid product' },
+        { key: 'marketplaceId', label: 'Marketplace ID', placeholder: 'cuid marketplace' },
+        { key: 'price', label: 'Price', placeholder: '1999000', type: 'number' }
+      ]
+    }
   };
 
-  const createProduct = async () => {
-    const name = window.prompt('Product name');
-    if (!name) return;
-    const slug = window.prompt('Slug', name.toLowerCase().replace(/\s+/g, '-'));
-    if (!slug) return;
-    await apiFetch('/products', {
-      method: 'POST',
-      body: JSON.stringify({ name, slug, status: 'DRAFT', isFeatured: false, isTrending: false, worthItScore: 0 })
-    });
-    await refresh();
+  const openCreateModal = (type: CreateRecordType) => {
+    const defaults: Record<string, string> = {
+      name: '',
+      slug: '',
+      baseUrl: 'https://example.com',
+      title: '',
+      content: 'Draft article content',
+      productId: '',
+      marketplaceId: '',
+      url: '',
+      shortCode: '',
+      trackingCode: '',
+      price: ''
+    };
+    setCreateForm(defaults);
+    setCreateError(null);
+    setCreateModalType(type);
   };
 
-  const createArticle = async () => {
-    const title = window.prompt('Article title');
-    if (!title) return;
-    const slug = window.prompt('Slug', title.toLowerCase().replace(/\s+/g, '-'));
-    if (!slug) return;
-    const content = window.prompt('Content', 'Draft article content') ?? '';
-    await apiFetch('/articles', {
-      method: 'POST',
-      body: JSON.stringify({ title, slug, content, excerpt: title, status: 'DRAFT' })
-    });
-    await refresh();
+  const closeCreateModal = () => {
+    if (isCreateSubmitting) return;
+    setCreateModalType(null);
+    setCreateError(null);
   };
 
-  const createAffiliateLink = async () => {
-    const productId = window.prompt('Product ID');
-    const marketplaceId = window.prompt('Marketplace ID');
-    const url = window.prompt('Affiliate URL');
-    const shortCode = window.prompt('Short code');
-    const trackingCode = window.prompt('Tracking code');
-    if (!productId || !marketplaceId || !url || !shortCode || !trackingCode) return;
-    await apiFetch('/affiliate-links', {
-      method: 'POST',
-      body: JSON.stringify({ productId, marketplaceId, url, shortCode, trackingCode, isActive: true })
-    });
-    await refresh();
+  const onCreateFieldChange = (key: string, value: string) => {
+    setCreateForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const createPrice = async () => {
-    const productId = window.prompt('Product ID');
-    const marketplaceId = window.prompt('Marketplace ID');
-    const price = window.prompt('Price');
-    if (!productId || !marketplaceId || !price) return;
-    await apiFetch('/product-prices', {
-      method: 'POST',
-      body: JSON.stringify({ productId, marketplaceId, price: Number(price), discount: 0, rating: 0, soldCount: 0, reviewCount: 0, isActive: true })
-    });
-    await refresh();
+  const submitCreateForm = async () => {
+    if (!createModalType) return;
+    setCreateError(null);
+    setIsCreateSubmitting(true);
+
+    try {
+      if (createModalType === 'product') {
+        if (!createForm.name || !createForm.slug) throw new Error('Product name dan slug wajib diisi.');
+        await apiFetch('/products', {
+          method: 'POST',
+          body: JSON.stringify({ name: createForm.name, slug: createForm.slug, status: 'DRAFT', isFeatured: false, isTrending: false, worthItScore: 0 })
+        });
+      }
+
+      if (createModalType === 'marketplace') {
+        if (!createForm.name || !createForm.slug) throw new Error('Marketplace name dan slug wajib diisi.');
+        await apiFetch('/marketplaces', {
+          method: 'POST',
+          body: JSON.stringify({ name: createForm.name, slug: createForm.slug, displayName: createForm.name, baseUrl: createForm.baseUrl || undefined, isActive: true })
+        });
+      }
+
+      if (createModalType === 'affiliate') {
+        if (!createForm.productId || !createForm.marketplaceId || !createForm.url || !createForm.shortCode || !createForm.trackingCode) {
+          throw new Error('Semua field affiliate link wajib diisi.');
+        }
+        await apiFetch('/affiliate-links', {
+          method: 'POST',
+          body: JSON.stringify({
+            productId: createForm.productId,
+            marketplaceId: createForm.marketplaceId,
+            url: createForm.url,
+            shortCode: createForm.shortCode,
+            trackingCode: createForm.trackingCode,
+            isActive: true
+          })
+        });
+      }
+
+      if (createModalType === 'article') {
+        if (!createForm.title || !createForm.slug) throw new Error('Article title dan slug wajib diisi.');
+        await apiFetch('/articles', {
+          method: 'POST',
+          body: JSON.stringify({ title: createForm.title, slug: createForm.slug, content: createForm.content || '', excerpt: createForm.title, status: 'DRAFT' })
+        });
+      }
+
+      if (createModalType === 'price') {
+        if (!createForm.productId || !createForm.marketplaceId || !createForm.price) throw new Error('Product ID, Marketplace ID, dan Price wajib diisi.');
+        await apiFetch('/product-prices', {
+          method: 'POST',
+          body: JSON.stringify({
+            productId: createForm.productId,
+            marketplaceId: createForm.marketplaceId,
+            price: Number(createForm.price),
+            discount: 0,
+            rating: 0,
+            soldCount: 0,
+            reviewCount: 0,
+            isActive: true
+          })
+        });
+      }
+
+      await refresh();
+      setCreateModalType(null);
+    } catch (error) {
+      setCreateError(error instanceof Error ? error.message : 'Gagal membuat data');
+    } finally {
+      setIsCreateSubmitting(false);
+    }
   };
 
   const mutateWithConfirm = async (message: string, request: () => Promise<unknown>) => {
@@ -294,19 +394,19 @@ export default function AdminPage() {
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
               <div className="text-sm font-semibold text-slate-900">Create records</div>
               <div className="mt-3 grid gap-2">
-                <Button variant="outline" size="sm" onClick={() => void createProduct()}>
+                <Button variant="outline" size="sm" onClick={() => openCreateModal('product')}>
                   <Package className="mr-2 h-4 w-4" /> Create product
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => void createMarketplace()}>
+                <Button variant="outline" size="sm" onClick={() => openCreateModal('marketplace')}>
                   <Store className="mr-2 h-4 w-4" /> Create marketplace
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => void createAffiliateLink()}>
+                <Button variant="outline" size="sm" onClick={() => openCreateModal('affiliate')}>
                   <Link2 className="mr-2 h-4 w-4" /> Create affiliate link
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => void createArticle()}>
+                <Button variant="outline" size="sm" onClick={() => openCreateModal('article')}>
                   <FileText className="mr-2 h-4 w-4" /> Create article
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => void createPrice()}>
+                <Button variant="outline" size="sm" onClick={() => openCreateModal('price')}>
                   <Database className="mr-2 h-4 w-4" /> Create product price
                 </Button>
               </div>
@@ -713,6 +813,65 @@ export default function AdminPage() {
           </div>
         </Card>
       </section>
+
+      {createModalType ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/55 px-4">
+          <Card className="w-full max-w-xl bg-white p-6 text-slate-900 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-bold tracking-tight text-slate-950">{createFormConfig[createModalType].title}</h3>
+                <p className="mt-1 text-sm text-slate-500">{createFormConfig[createModalType].description}</p>
+              </div>
+              <button
+                type="button"
+                onClick={closeCreateModal}
+                className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                disabled={isCreateSubmitting}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mt-5 grid gap-3">
+              {createFormConfig[createModalType].fields.map((field) => (
+                <label key={field.key} className="grid gap-1.5 text-sm">
+                  <span className="font-medium text-slate-700">{field.label}</span>
+                  {field.multiline ? (
+                    <textarea
+                      className="min-h-28 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-0 focus:border-orange-500"
+                      placeholder={field.placeholder}
+                      value={createForm[field.key] ?? ''}
+                      onChange={(event) => onCreateFieldChange(field.key, event.target.value)}
+                    />
+                  ) : (
+                    <input
+                      className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none ring-0 focus:border-orange-500"
+                      placeholder={field.placeholder}
+                      type={field.type ?? 'text'}
+                      value={createForm[field.key] ?? ''}
+                      onChange={(event) => onCreateFieldChange(field.key, event.target.value)}
+                    />
+                  )}
+                </label>
+              ))}
+            </div>
+
+            {createError ? (
+              <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{createError}</div>
+            ) : null}
+
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={closeCreateModal} disabled={isCreateSubmitting}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={() => void submitCreateForm()} disabled={isCreateSubmitting}>
+                {isCreateSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Create
+              </Button>
+            </div>
+          </Card>
+        </div>
+      ) : null}
     </main>
   );
 }
