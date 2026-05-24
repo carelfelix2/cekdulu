@@ -32,8 +32,8 @@ enum MarketplaceSlug {
 }
 
 enum ProductStatus {
-  ACTIVE
   DRAFT
+  PUBLISHED
   ARCHIVED
   MERGED
 }
@@ -65,6 +65,12 @@ enum JobStatus {
   FAILED
   RETRYING
   CANCELED
+}
+
+enum ScrapedProductStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum SearchSource {
@@ -118,6 +124,7 @@ model User {
   priceAlerts   PriceAlert[]
   searchQueries SearchQuery[]
   redirectClicks RedirectClick[]
+  affiliateClicks AffiliateClick[]
 
   @@index([status, createdAt])
 }
@@ -179,12 +186,15 @@ model RolePermission {
 
 model Marketplace {
   id               String            @id @default(cuid())
-  slug             MarketplaceSlug   @unique
+  slug             String            @unique
   name             String
   displayName      String
   color            String
   active           Boolean           @default(true)
+  isActive         Boolean           @default(true)
   affiliateEnabled Boolean           @default(false)
+  baseUrl          String?
+  logoUrl          String?
   websiteUrl       String?
   apiBaseUrl       String?
   currency         String            @default("IDR")
@@ -195,12 +205,16 @@ model Marketplace {
   sellers          Seller[]
   listings         ProductListing[]
   affiliateLinks   AffiliateLink[]
+  affiliateClicks  AffiliateClick[]
   deals            Deal[]
   scrapeJobs       ScrapeJob[]
+  scrapingJobs     ScrapingJob[]
   pricePoints      PricePoint[]
+  productPrices    ProductPrice[]
   priceAlerts      PriceAlert[]
   analytics        AnalyticsEvent[]
   redirects        RedirectClick[]
+  scrapedProducts  ScrapedProduct[]
   productMatches   ProductMatchCandidate[]
   scrapeRuns       ScrapeRun[]
 
@@ -260,8 +274,11 @@ model Product {
   matchGroupId         String?
   imageUrl             String?
   imageAlt             String?
-  status               ProductStatus       @default(ACTIVE)
+  status               ProductStatus       @default(DRAFT)
   isActive             Boolean             @default(true)
+  isFeatured           Boolean             @default(false)
+  isTrending           Boolean             @default(false)
+  worthItScore         Float               @default(0)
   seoTitle             String?
   seoDescription      String?
   canonicalUrl         String?
@@ -277,6 +294,7 @@ model Product {
   variants             ProductVariant[]
   images               ProductImage[]
   listings             ProductListing[]
+  productPrices        ProductPrice[]
   pricePoints          PricePoint[]
   affiliateLinks       AffiliateLink[]
   deals                Deal[]
@@ -285,6 +303,8 @@ model Product {
   faqItems             ProductFAQ[]
   redirects            RedirectClick[]
   analytics            AnalyticsEvent[]
+  scrapedProducts      ScrapedProduct[]
+  affiliateClicks      AffiliateClick[]
   sourceMatches        ProductMatchCandidate[] @relation("ProductSource")
   candidateMatches     ProductMatchCandidate[] @relation("ProductCandidate")
 
@@ -387,12 +407,16 @@ model AffiliateLink {
   marketplaceId  String
   listingId      String?
   url            String
+  affiliateUrl  String?
   shortCode      String        @unique
   trackingCode   String        @unique
   utmSource      String?
   utmMedium      String?
   utmCampaign    String?
+  campaignName   String?
   isPrimary      Boolean       @default(false)
+  isActive       Boolean       @default(true)
+  clickCount     Int           @default(0)
   clicks         Int           @default(0)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
@@ -400,8 +424,31 @@ model AffiliateLink {
   marketplace    Marketplace   @relation(fields: [marketplaceId], references: [id], onDelete: Cascade)
   listing        ProductListing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
   redirectClicks RedirectClick[]
+  affiliateClicks AffiliateClick[]
 
   @@index([productId, marketplaceId])
+}
+
+model AffiliateClick {
+  id             String        @id @default(cuid())
+  affiliateLinkId String
+  productId      String?
+  marketplaceId  String
+  userId         String?
+  visitorHash    String?
+  userAgent      String?
+  referer        String?
+  source         SearchSource  @default(HOMEPAGE)
+  clickedAt      DateTime      @default(now())
+  createdAt      DateTime      @default(now())
+  affiliateLink  AffiliateLink @relation(fields: [affiliateLinkId], references: [id], onDelete: Cascade)
+  product        Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  marketplace    Marketplace   @relation(fields: [marketplaceId], references: [id], onDelete: Cascade)
+  user           User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([affiliateLinkId, clickedAt])
+  @@index([productId, clickedAt])
+  @@index([marketplaceId, clickedAt])
 }
 
 model RedirectClick {
@@ -453,6 +500,30 @@ model PricePoint {
   @@index([productListingId, capturedAt])
 }
 
+model ProductPrice {
+  id             String        @id @default(cuid())
+  productId      String
+  marketplaceId  String
+  price          Decimal       @db.Decimal(18, 2)
+  originalPrice  Decimal?      @db.Decimal(18, 2)
+  discount       Float         @default(0)
+  rating         Float         @default(0)
+  soldCount      Int           @default(0)
+  reviewCount    Int           @default(0)
+  sellerName     String?
+  productUrl     String?
+  scrapedAt      DateTime      @default(now())
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  product        Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  marketplace    Marketplace   @relation(fields: [marketplaceId], references: [id], onDelete: Cascade)
+
+  @@index([productId, marketplaceId])
+  @@index([marketplaceId, price])
+  @@index([scrapedAt])
+}
+
 model PriceAlert {
   id             String        @id @default(cuid())
   userId         String
@@ -498,9 +569,11 @@ model Article {
   content            String
   status             ArticleStatus    @default(DRAFT)
   coverImageUrl      String?
+  featuredImage      String?
   coverImageAlt      String?
   seoTitle           String?
   seoDescription     String?
+  metaDescription    String?
   canonicalUrl       String?
   publishedAt        DateTime?
   createdAt          DateTime         @default(now())
@@ -519,6 +592,56 @@ model Article {
 
   @@index([status, publishedAt])
   @@index([categoryId, featured])
+}
+
+model ScrapingJob {
+  id              String        @id @default(cuid())
+  marketplaceId   String
+  keyword         String
+  limit           Int
+  totalFound      Int           @default(0)
+  status          JobStatus     @default(QUEUED)
+  errorMessage    String?
+  source          ScrapeSource  @default(MANUAL)
+  startedAt       DateTime?
+  finishedAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  marketplace     Marketplace   @relation(fields: [marketplaceId], references: [id], onDelete: Cascade)
+  scrapedProducts ScrapedProduct[]
+
+  @@index([marketplaceId, createdAt])
+  @@index([keyword, createdAt])
+  @@index([status, createdAt])
+}
+
+model ScrapedProduct {
+  id               String               @id @default(cuid())
+  scrapingJobId    String?
+  productName      String
+  productUrl       String
+  imageUrl         String?
+  price            Decimal?             @db.Decimal(18, 2)
+  rating           Float                @default(0)
+  soldCount        Int                  @default(0)
+  reviewCount      Int                  @default(0)
+  shopId           String?
+  itemId           String?
+  marketplaceId    String
+  keyword          String
+  source           String?
+  scrapedAt        DateTime             @default(now())
+  status           ScrapedProductStatus @default(PENDING)
+  matchedProductId  String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  scrapingJob      ScrapingJob?         @relation(fields: [scrapingJobId], references: [id], onDelete: SetNull)
+  marketplace      Marketplace          @relation(fields: [marketplaceId], references: [id], onDelete: Cascade)
+  matchedProduct   Product?             @relation(fields: [matchedProductId], references: [id], onDelete: SetNull)
+
+  @@index([marketplaceId, scrapedAt])
+  @@index([keyword, scrapedAt])
+  @@index([status, scrapedAt])
 }
 
 model ArticleTagOnArticle {

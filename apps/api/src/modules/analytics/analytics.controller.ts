@@ -14,4 +14,9 @@ export class AnalyticsController {
   dashboard(): Promise<{ products: number; articles: number; deals: number; clicks: number }> {
     return this.analyticsService.dashboard();
   }
+
+  @Get('summary')
+  summary() {
+    return this.analyticsService.summary();
+  }
 }

@@ -10,8 +10,9 @@ function getProduct(slug: string) {
   return featuredProducts.find((product) => product.slug === slug);
 }
 
-export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
-  const product = getProduct(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const product = getProduct(slug);
   return {
     title: product ? `Comparison ${product.name}` : 'Comparison',
     description: 'Marketplace comparison page for Indonesia price tracking.',
@@ -21,8 +22,9 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   };
 }
 
-export default function ComparePage({ params }: { params: { slug: string } }) {
-  const product = getProduct(params.slug);
+export default async function ComparePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const product = getProduct(slug);
   if (!product) notFound();
 
   return (

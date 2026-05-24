@@ -1,5 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
+import type { Prisma } from '@cekdulu/database';
+import type { CreateProductDto } from './dto/create-product.dto';
+import type { UpdateProductDto } from './dto/update-product.dto';
 
 type WorthItScoreInput = {
   price: number;
@@ -78,16 +81,43 @@ export class ProductsService {
     return this.prismaService.client;
   }
 
-  async list(page = 1, limit = 20): Promise<{ items: any[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> {
+  async list(filters: { page?: number; limit?: number; q?: string; categoryId?: string; marketplaceId?: string; status?: string } = {}): Promise<{ items: any[]; pagination: { page: number; limit: number; total: number; totalPages: number } }> {
+    const page = Math.max(filters.page ?? 1, 1);
+    const limit = Math.max(filters.limit ?? 20, 1);
     const skip = (Math.max(page, 1) - 1) * Math.max(limit, 1);
+    const where: Prisma.ProductWhereInput = {
+      ...(filters.q?.trim()
+        ? {
+            OR: [
+              { name: { contains: filters.q.trim(), mode: 'insensitive' as const } },
+              { slug: { contains: filters.q.trim(), mode: 'insensitive' as const } },
+              { description: { contains: filters.q.trim(), mode: 'insensitive' as const } }
+            ]
+          }
+        : {}),
+      ...(filters.categoryId ? { categoryId: filters.categoryId } : {}),
+      ...(filters.status ? { status: filters.status as never } : {}),
+      ...(filters.marketplaceId
+        ? {
+            productPrices: { some: { marketplaceId: filters.marketplaceId } }
+          }
+        : {})
+    };
     const [items, total] = await Promise.all([
       this.prisma.product.findMany({
         skip,
         take: limit,
-        orderBy: [{ popularityScore: 'desc' }, { updatedAt: 'desc' }],
-        include: { brand: true, category: true, listings: { take: 3, orderBy: { price: 'asc' }, include: { marketplace: true } } }
+        where,
+        orderBy: [{ isFeatured: 'desc' }, { isTrending: 'desc' }, { worthItScore: 'desc' }, { updatedAt: 'desc' }],
+        include: {
+          brand: true,
+          category: true,
+          productPrices: { include: { marketplace: true }, orderBy: [{ price: 'asc' }, { scrapedAt: 'desc' }], take: 5 },
+          listings: { take: 3, orderBy: { price: 'asc' }, include: { marketplace: true } },
+          _count: { select: { affiliateLinks: true, productPrices: true, scrapedProducts: true } }
+        }
       }),
-      this.prisma.product.count()
+      this.prisma.product.count({ where })
     ]);
 
     return {
@@ -100,7 +130,7 @@ export class ProductsService {
     return this.prisma.product.findMany({
       take: 10,
       orderBy: [{ popularityScore: 'desc' }, { updatedAt: 'desc' }],
-      include: { brand: true, category: true }
+        include: { brand: true, category: true, productPrices: { include: { marketplace: true }, take: 3, orderBy: { price: 'asc' } } }
     });
   }
 
@@ -127,6 +157,7 @@ export class ProductsService {
         images: true,
         variants: true,
         listings: { include: { marketplace: true, seller: true }, orderBy: { price: 'asc' } },
+        productPrices: { include: { marketplace: true }, orderBy: [{ price: 'asc' }, { scrapedAt: 'desc' }] },
         faqItems: true
       }
     });
@@ -185,5 +216,65 @@ export class ProductsService {
     });
 
     return { product, points };
+  }
+
+  async create(dto: CreateProductDto) {
+    return this.prisma.product.create({
+      data: {
+        name: dto.name,
+        slug: dto.slug.toLowerCase().replace(/\s+/g, '-'),
+        description: dto.description,
+        brandId: dto.brandId,
+        categoryId: dto.categoryId,
+        imageUrl: dto.imageUrl,
+        imageAlt: dto.imageAlt,
+        status: (dto.status ?? 'DRAFT') as never,
+        worthItScore: dto.worthItScore ?? 0,
+        isFeatured: dto.isFeatured ?? false,
+        isTrending: dto.isTrending ?? false,
+        popularityScore: dto.popularityScore ?? 0
+      }
+    });
+  }
+
+  async update(id: string, dto: UpdateProductDto) {
+    const product = await this.prisma.product.findUnique({ where: { id } });
+    if (!product) throw new NotFoundException('Product not found');
+
+    return this.prisma.product.update({
+      where: { id },
+      data: {
+        ...(dto.name ? { name: dto.name } : {}),
+        ...(dto.slug ? { slug: dto.slug.toLowerCase().replace(/\s+/g, '-') } : {}),
+        ...(dto.description !== undefined ? { description: dto.description } : {}),
+        ...(dto.brandId !== undefined ? { brandId: dto.brandId } : {}),
+        ...(dto.categoryId !== undefined ? { categoryId: dto.categoryId } : {}),
+        ...(dto.imageUrl !== undefined ? { imageUrl: dto.imageUrl } : {}),
+        ...(dto.imageAlt !== undefined ? { imageAlt: dto.imageAlt } : {}),
+        ...(dto.status ? { status: dto.status as never } : {}),
+        ...(dto.worthItScore !== undefined ? { worthItScore: dto.worthItScore } : {}),
+        ...(dto.isFeatured !== undefined ? { isFeatured: dto.isFeatured } : {}),
+        ...(dto.isTrending !== undefined ? { isTrending: dto.isTrending } : {}),
+        ...(dto.popularityScore !== undefined ? { popularityScore: dto.popularityScore } : {})
+      }
+    });
+  }
+
+  async remove(id: string) {
+    const product = await this.prisma.product.findUnique({ where: { id } });
+    if (!product) throw new NotFoundException('Product not found');
+    return this.prisma.product.delete({ where: { id } });
+  }
+
+  async setFeatured(id: string, isFeatured: boolean) {
+    return this.prisma.product.update({ where: { id }, data: { isFeatured } });
+  }
+
+  async setTrending(id: string, isTrending: boolean) {
+    return this.prisma.product.update({ where: { id }, data: { isTrending } });
+  }
+
+  async setStatus(id: string, status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'MERGED') {
+    return this.prisma.product.update({ where: { id }, data: { status: status as never } });
   }
 }

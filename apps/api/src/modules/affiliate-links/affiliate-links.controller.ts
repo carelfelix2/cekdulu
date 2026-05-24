@@ -11,12 +11,12 @@ export class AffiliateLinksController {
   }
 
   @Post()
-  create(@Body() body: { productId: string; marketplaceId: string; listingId?: string; url: string; shortCode: string; trackingCode: string }): Promise<any> {
+  create(@Body() body: { productId: string; marketplaceId: string; listingId?: string; url: string; affiliateUrl?: string; campaignName?: string; shortCode: string; trackingCode: string; isActive?: boolean }): Promise<any> {
     return this.affiliateLinksService.create(body);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: Partial<{ url: string; isPrimary: boolean; utmSource?: string; utmMedium?: string; utmCampaign?: string }>): Promise<any> {
+  update(@Param('id') id: string, @Body() body: Partial<{ url: string; affiliateUrl?: string; campaignName?: string; isPrimary: boolean; isActive: boolean; utmSource?: string; utmMedium?: string; utmCampaign?: string }>): Promise<any> {
     return this.affiliateLinksService.update(id, body);
   }
 

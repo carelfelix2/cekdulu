@@ -6,7 +6,8 @@ import { RedisModule } from './common/redis.module';
 import { HealthController } from './modules/health/health.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { ProductsModule } from './modules/products/products.module';
-import { MarketsModule } from './modules/markets/markets.module';
+import { MarketplacesModule } from './modules/marketplaces/marketplaces.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { BrandsModule } from './modules/brands/brands.module';
 import { AffiliateLinksModule } from './modules/affiliate-links/affiliate-links.module';
@@ -16,6 +17,9 @@ import { SearchModule } from './modules/search/search.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { QueueModule } from './modules/queue/queue.module';
 import { RedirectsModule } from './modules/redirects/redirects.module';
+import { ProductPricesModule } from './modules/product-prices/product-prices.module';
+import { ScrapingModule } from './modules/scraping/scraping.module';
+import { ScrapedProductsModule } from './modules/scraped-products/scraped-products.module';
 
 @Module({
   imports: [
@@ -26,8 +30,10 @@ import { RedirectsModule } from './modules/redirects/redirects.module';
     DatabaseModule,
     RedisModule,
     AuthModule,
+    DashboardModule,
     ProductsModule,
-    MarketsModule,
+    MarketplacesModule,
+    ProductPricesModule,
     CategoriesModule,
     BrandsModule,
     AffiliateLinksModule,
@@ -36,6 +42,8 @@ import { RedirectsModule } from './modules/redirects/redirects.module';
     SearchModule,
     AnalyticsModule,
     QueueModule,
+    ScrapingModule,
+    ScrapedProductsModule,
     RedirectsModule
   ],
   controllers: [HealthController]

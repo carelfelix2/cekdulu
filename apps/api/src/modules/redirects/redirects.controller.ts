@@ -18,3 +18,20 @@ export class RedirectsController {
     return { success: true };
   }
 }
+
+@Controller('redirect')
+export class RedirectController {
+  constructor(private readonly redirectsService: RedirectsService) {}
+
+  @Get(':affiliateId')
+  @Header('Cache-Control', 'no-store')
+  async redirectById(
+    @Param('affiliateId') affiliateId: string,
+    @Query('source') source = 'HOMEPAGE',
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.redirectsService.trackAndResolveById(affiliateId, source);
+    res.redirect(302, result.url);
+    return { success: true };
+  }
+}

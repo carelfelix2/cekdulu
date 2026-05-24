@@ -8,8 +8,9 @@ function getArticle(slug: string) {
   return trendingArticles.find((article) => article.slug === slug);
 }
 
-export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
-  const article = getArticle(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const article = getArticle(slug);
   return {
     title: article ? article.title : 'Artikel',
     description: article ? `${article.title} di CekDulu` : 'SEO article page',
@@ -19,8 +20,9 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   };
 }
 
-export default function ArticlePage({ params }: { params: { slug: string } }) {
-  const article = getArticle(params.slug);
+export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const article = getArticle(slug);
   if (!article) notFound();
 
   const articleSchema = {
