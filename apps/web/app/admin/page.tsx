@@ -36,7 +36,7 @@ import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/hooks/use-auth';
 
 type AnyRecord = Record<string, any>;
-type CreateRecordType = 'product' | 'marketplace' | 'affiliate' | 'article' | 'price';
+type CreateRecordType = 'product' | 'marketplace' | 'affiliate' | 'price';
 type CreateField = {
   key: string;
   label: string;
@@ -142,15 +142,6 @@ export default function AdminPage() {
         { key: 'trackingCode', label: 'Tracking code', placeholder: 'trk_admin_001' }
       ]
     },
-    article: {
-      title: 'Create article',
-      description: 'Buat draft artikel baru untuk konten SEO.',
-      fields: [
-        { key: 'title', label: 'Article title', placeholder: 'Judul artikel' },
-        { key: 'slug', label: 'Slug', placeholder: 'judul-artikel' },
-        { key: 'content', label: 'Content', placeholder: 'Tulis konten draft di sini...', multiline: true }
-      ]
-    },
     price: {
       title: 'Create product price',
       description: 'Tambahkan snapshot harga produk.',
@@ -167,8 +158,6 @@ export default function AdminPage() {
       name: '',
       slug: '',
       baseUrl: 'https://example.com',
-      title: '',
-      content: 'Draft article content',
       productId: '',
       marketplaceId: '',
       url: '',
@@ -227,14 +216,6 @@ export default function AdminPage() {
             trackingCode: createForm.trackingCode,
             isActive: true
           })
-        });
-      }
-
-      if (createModalType === 'article') {
-        if (!createForm.title || !createForm.slug) throw new Error('Article title dan slug wajib diisi.');
-        await apiFetch('/articles', {
-          method: 'POST',
-          body: JSON.stringify({ title: createForm.title, slug: createForm.slug, content: createForm.content || '', excerpt: createForm.title, status: 'DRAFT' })
         });
       }
 
@@ -403,9 +384,9 @@ export default function AdminPage() {
                 <Button variant="outline" size="sm" onClick={() => openCreateModal('affiliate')}>
                   <Link2 className="mr-2 h-4 w-4" /> Create affiliate link
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => openCreateModal('article')}>
+                <Link href="/admin/articles/new" className="inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-800 hover:bg-slate-50">
                   <FileText className="mr-2 h-4 w-4" /> Create article
-                </Button>
+                </Link>
                 <Button variant="outline" size="sm" onClick={() => openCreateModal('price')}>
                   <Database className="mr-2 h-4 w-4" /> Create product price
                 </Button>
