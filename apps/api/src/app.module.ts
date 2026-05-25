@@ -20,6 +20,7 @@ import { RedirectsModule } from './modules/redirects/redirects.module';
 import { ProductPricesModule } from './modules/product-prices/product-prices.module';
 import { ScrapingModule } from './modules/scraping/scraping.module';
 import { ScrapedProductsModule } from './modules/scraped-products/scraped-products.module';
+import { ProductImportModule } from './modules/product-import/product-import.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { ScrapedProductsModule } from './modules/scraped-products/scraped-produc
     QueueModule,
     ScrapingModule,
     ScrapedProductsModule,
+    ProductImportModule,
     RedirectsModule
   ],
   controllers: [HealthController]

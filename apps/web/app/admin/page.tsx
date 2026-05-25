@@ -86,6 +86,13 @@ export default function AdminPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [isCreateSubmitting, setIsCreateSubmitting] = useState(false);
 
+  // Import product by URL state
+  const [importUrl, setImportUrl] = useState<string>('');
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importData, setImportData] = useState<any | null>(null);
+  const [importSaving, setImportSaving] = useState(false);
+
   const overviewQuery = useQuery({
     queryKey: ['admin-overview'],
     queryFn: loadOverview,
@@ -170,10 +177,27 @@ export default function AdminPage() {
     setCreateModalType(type);
   };
 
+  const openImportModal = () => {
+    setImportUrl('');
+    setImportError(null);
+    setImportData(null);
+    setCreateModalType('product'); // reuse product modal state but we will render import UI when importData !== null or importUrl set via flag
+    // set a marker in createForm to indicate import mode
+    setCreateForm((prev) => ({ ...prev, __importMode: 'true' }));
+  };
+
   const closeCreateModal = () => {
-    if (isCreateSubmitting) return;
+    if (isCreateSubmitting || importSaving) return;
     setCreateModalType(null);
     setCreateError(null);
+    setImportUrl('');
+    setImportError(null);
+    setImportData(null);
+    setCreateForm((prev) => {
+      const copy = { ...prev } as any;
+      delete copy.__importMode;
+      return copy;
+    });
   };
 
   const onCreateFieldChange = (key: string, value: string) => {
@@ -186,6 +210,21 @@ export default function AdminPage() {
     setIsCreateSubmitting(true);
 
     try {
+      // If import mode marker present, handle via import save flow
+      if ((createForm as any).__importMode) {
+        if (!importData) throw new Error('No imported product to save');
+        setImportSaving(true);
+        try {
+          const res = await apiFetch('/product-import/save', { method: 'POST', body: JSON.stringify({ productData: importData }) });
+          await refresh();
+          setCreateModalType(null);
+          setImportData(null);
+        } finally {
+          setImportSaving(false);
+        }
+        return;
+      }
+
       if (createModalType === 'product') {
         if (!createForm.name || !createForm.slug) throw new Error('Product name dan slug wajib diisi.');
         await apiFetch('/products', {
@@ -242,6 +281,24 @@ export default function AdminPage() {
       setCreateError(error instanceof Error ? error.message : 'Gagal membuat data');
     } finally {
       setIsCreateSubmitting(false);
+    }
+  };
+
+  const fetchImport = async () => {
+    setImportError(null);
+    setImportLoading(true);
+    setImportData(null);
+    try {
+      if (!importUrl) throw new Error('URL wajib diisi');
+      const res = await apiFetch<{ product: AnyRecord }>('/product-import/fetch', { method: 'POST', body: JSON.stringify({ url: importUrl }) });
+      const resData = res?.data as any;
+      // apiFetch body returns { success: true, product: {...} }
+      const productData = resData?.product ?? resData;
+      setImportData(productData);
+    } catch (err: any) {
+      setImportError(err?.message || 'Gagal mengambil data');
+    } finally {
+      setImportLoading(false);
     }
   };
 
@@ -387,6 +444,9 @@ export default function AdminPage() {
                 <Link href="/admin/articles/new" className="inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-800 hover:bg-slate-50">
                   <FileText className="mr-2 h-4 w-4" /> Create article
                 </Link>
+                <Button variant="outline" size="sm" onClick={() => openImportModal()}>
+                  <Package className="mr-2 h-4 w-4" /> Import product
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => openCreateModal('price')}>
                   <Database className="mr-2 h-4 w-4" /> Create product price
                 </Button>
@@ -798,58 +858,120 @@ export default function AdminPage() {
       {createModalType ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/55 px-4">
           <Card className="w-full max-w-xl bg-white p-6 text-slate-900 shadow-2xl">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-bold tracking-tight text-slate-950">{createFormConfig[createModalType].title}</h3>
-                <p className="mt-1 text-sm text-slate-500">{createFormConfig[createModalType].description}</p>
-              </div>
-              <button
-                type="button"
-                onClick={closeCreateModal}
-                className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
-                disabled={isCreateSubmitting}
-              >
-                Close
-              </button>
-            </div>
+            {((createForm as any).__importMode) ? (
+              <>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-bold tracking-tight text-slate-950">Import product by URL</h3>
+                    <p className="mt-1 text-sm text-slate-500">Paste product URL (Shopee) lalu klik "Fetch Product" untuk melihat preview.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeCreateModal}
+                    className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                    disabled={isCreateSubmitting || importSaving}
+                  >
+                    Close
+                  </button>
+                </div>
 
-            <div className="mt-5 grid gap-3">
-              {createFormConfig[createModalType].fields.map((field) => (
-                <label key={field.key} className="grid gap-1.5 text-sm">
-                  <span className="font-medium text-slate-700">{field.label}</span>
-                  {field.multiline ? (
-                    <textarea
-                      className="min-h-28 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-0 focus:border-orange-500"
-                      placeholder={field.placeholder}
-                      value={createForm[field.key] ?? ''}
-                      onChange={(event) => onCreateFieldChange(field.key, event.target.value)}
-                    />
-                  ) : (
-                    <input
-                      className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none ring-0 focus:border-orange-500"
-                      placeholder={field.placeholder}
-                      type={field.type ?? 'text'}
-                      value={createForm[field.key] ?? ''}
-                      onChange={(event) => onCreateFieldChange(field.key, event.target.value)}
-                    />
-                  )}
-                </label>
-              ))}
-            </div>
+                <div className="mt-5 grid gap-3">
+                  <label className="grid gap-1.5 text-sm">
+                    <span className="font-medium text-slate-700">Product URL</span>
+                    <input className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none ring-0 focus:border-orange-500" placeholder="https://shopee.co.id/..." value={importUrl} onChange={(e) => setImportUrl(e.target.value)} />
+                  </label>
 
-            {createError ? (
-              <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{createError}</div>
-            ) : null}
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => void fetchImport()} disabled={importLoading}>
+                      {importLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      Fetch Product
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={closeCreateModal} disabled={importLoading || importSaving}>Cancel</Button>
+                  </div>
 
-            <div className="mt-5 flex items-center justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={closeCreateModal} disabled={isCreateSubmitting}>
-                Cancel
-              </Button>
-              <Button size="sm" onClick={() => void submitCreateForm()} disabled={isCreateSubmitting}>
-                {isCreateSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Create
-              </Button>
-            </div>
+                  {importError ? <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{importError}</div> : null}
+
+                  {importData ? (
+                    <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex gap-3">
+                        {importData.imageUrl ? <img src={importData.imageUrl} alt={importData.productName} className="h-24 w-24 rounded-md object-cover" /> : <div className="h-24 w-24 rounded-md bg-white/50" />}
+                        <div>
+                          <div className="font-semibold text-slate-900">{importData.productName}</div>
+                          <div className="text-sm text-slate-600">{importData.shopName ?? ''} · {importData.marketplace}</div>
+                          <div className="mt-2 text-lg font-black text-slate-900">{importData.price ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(importData.price) : '-'}</div>
+                          <div className="text-sm text-slate-600">Sold: {importData.soldCount ?? '-' } · Rating: {importData.rating ?? '-'}</div>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 text-sm text-slate-700">{importData.description ? importData.description.slice(0, 400) : ''}</div>
+
+                      <div className="mt-4 flex justify-end gap-2">
+                        <Button variant="outline" size="sm" onClick={() => { setImportData(null); }} disabled={importSaving}>Cancel</Button>
+                        <Button size="sm" onClick={() => void submitCreateForm()} disabled={importSaving}>
+                          {importSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                          Save Product
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-bold tracking-tight text-slate-950">{createFormConfig[createModalType].title}</h3>
+                    <p className="mt-1 text-sm text-slate-500">{createFormConfig[createModalType].description}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeCreateModal}
+                    className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                    disabled={isCreateSubmitting}
+                  >
+                    Close
+                  </button>
+                </div>
+
+                <div className="mt-5 grid gap-3">
+                  {createFormConfig[createModalType].fields.map((field) => (
+                    <label key={field.key} className="grid gap-1.5 text-sm">
+                      <span className="font-medium text-slate-700">{field.label}</span>
+                      {field.multiline ? (
+                        <textarea
+                          className="min-h-28 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-0 focus:border-orange-500"
+                          placeholder={field.placeholder}
+                          value={createForm[field.key] ?? ''}
+                          onChange={(event) => onCreateFieldChange(field.key, event.target.value)}
+                        />
+                      ) : (
+                        <input
+                          className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none ring-0 focus:border-orange-500"
+                          placeholder={field.placeholder}
+                          type={field.type ?? 'text'}
+                          value={createForm[field.key] ?? ''}
+                          onChange={(event) => onCreateFieldChange(field.key, event.target.value)}
+                        />
+                      )}
+                    </label>
+                  ))}
+                </div>
+
+                {createError ? (
+                  <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{createError}</div>
+                ) : null}
+
+                <div className="mt-5 flex items-center justify-end gap-2">
+                  <Button variant="outline" size="sm" onClick={closeCreateModal} disabled={isCreateSubmitting}>
+                    Cancel
+                  </Button>
+                  <Button size="sm" onClick={() => void submitCreateForm()} disabled={isCreateSubmitting}>
+                    {isCreateSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Create
+                  </Button>
+                </div>
+              </>
+            )}
           </Card>
         </div>
       ) : null}

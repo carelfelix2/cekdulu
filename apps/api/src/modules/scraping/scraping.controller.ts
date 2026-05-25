@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ScrapingService } from './scraping.service';
 import { RunScrapingDto } from './dto/run-scraping.dto';
 
@@ -19,5 +19,18 @@ export class ScrapingController {
   @Get('logs')
   logs() {
     return this.scrapingService.listLogs();
+  }
+
+  @Post('jobs/:id/results')
+  ingestResults(
+    @Param('id') id: string,
+    @Body() body: { items?: Array<Record<string, unknown>>; keyword?: string; marketplace?: string; source?: string },
+  ) {
+    return this.scrapingService.ingestResults(id, body);
+  }
+
+  @Post('jobs/:id/failed')
+  markFailed(@Param('id') id: string, @Body() body: { error?: string }) {
+    return this.scrapingService.markFailed(id, body.error);
   }
 }

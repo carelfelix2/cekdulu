@@ -7,6 +7,8 @@ export const envSchema = z.object({
   REDIS_URL: z.string().optional(),
   RABBITMQ_URL: z.string().optional(),
   OPENSEARCH_URL: z.string().optional(),
+  SCRAPER_API_BASE_URL: z.string().default('http://localhost:8000'),
+  SCRAPER_PROXY_URL: z.string().optional(),
   JWT_ACCESS_SECRET: z.string().min(1),
   JWT_REFRESH_SECRET: z.string().min(1),
   JWT_ACCESS_TTL: z.string().default('15m'),

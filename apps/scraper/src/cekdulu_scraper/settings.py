@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     queue_url: str = "amqp://guest:guest@localhost:5672"
     api_base_url: str = "http://localhost:4000"
     proxy_url: str | None = None
+    port: int = 8010
     concurrency: int = 6
     rate_limit_per_domain: int = 2
     cron: str = "*/15 * * * *"

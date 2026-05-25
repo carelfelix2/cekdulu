@@ -29,6 +29,23 @@ export class ScrapingService {
     return (process.env.SCRAPER_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
   }
 
+  private slugify(value: string) {
+    return value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .slice(0, 80);
+  }
+
+  private buildProductSlug(name: string, productUrl?: string | null, itemId?: string | null) {
+    const base = this.slugify(name || 'produk') || 'produk';
+    const tailSource = itemId || productUrl || `${Date.now()}`;
+    const tail = this.slugify(String(tailSource)).replace(/-/g, '').slice(-10);
+    return tail ? `${base}-${tail}` : base;
+  }
+
   async run(dto: RunScrapingDto) {
     // resolve marketplace
     let marketplace = null;
@@ -119,5 +136,127 @@ export class ScrapingService {
       await this.prisma.scrapingJob.update({ where: { id: job.id }, data: { status: 'FAILED', errorMessage: String(err?.message || err), finishedAt: new Date() } });
       return { success: false, jobId: job.id, message: String(err?.message || err) };
     }
+  }
+
+  async ingestResults(
+    jobId: string,
+    body: { items?: Array<Record<string, unknown>>; keyword?: string; marketplace?: string; source?: string },
+  ) {
+    const job = await this.prisma.scrapingJob.findUnique({ where: { id: jobId }, include: { marketplace: true } });
+    if (!job) {
+      return { success: false, message: 'Scraping job not found' };
+    }
+
+    const items = body.items ?? [];
+    let total = 0;
+
+    for (const item of items) {
+      const productUrl = String(item.productUrl ?? item.url ?? '');
+      if (!productUrl) continue;
+
+      const productName = String(item.productName ?? item.title ?? item.name ?? '').trim() || 'Produk Shopee';
+      const itemId = item.itemId ? String(item.itemId) : null;
+      const imageUrl = item.imageUrl ? String(item.imageUrl) : (item.image ? String(item.image) : null);
+      const price = Number(item.price ?? item.offerPrice ?? 0);
+      const rating = Number(item.rating ?? 0);
+      const soldCount = Number(item.soldCount ?? item.sold ?? 0);
+      const reviewCount = Number(item.reviewCount ?? item.reviews ?? 0);
+
+      total += 1;
+
+      const scrapedData: any = {
+        scrapingJobId: job.id,
+        productName,
+        productUrl,
+        imageUrl,
+        price,
+        rating,
+        soldCount,
+        reviewCount,
+        itemId,
+        marketplaceId: job.marketplaceId,
+        keyword: body.keyword ?? job.keyword,
+        source: body.source ?? 'worker',
+        rawData: item,
+        scrapedAt: new Date(),
+        status: 'APPROVED'
+      };
+
+      const existing = await this.prisma.scrapedProduct.findFirst({ where: { productUrl } });
+      const scraped = existing
+        ? await this.prisma.scrapedProduct.update({ where: { id: existing.id }, data: scrapedData })
+        : await this.prisma.scrapedProduct.create({ data: scrapedData });
+
+      // Auto-publish scraped data as product + latest price snapshot so it appears on website immediately.
+      const slug = this.buildProductSlug(productName, productUrl, itemId);
+      const product = await this.prisma.product.upsert({
+        where: { slug },
+        update: {
+          name: productName,
+          imageUrl,
+          status: 'PUBLISHED',
+          isActive: true,
+          updatedAt: new Date()
+        } as any,
+        create: {
+          slug,
+          name: productName,
+          imageUrl,
+          status: 'PUBLISHED',
+          isActive: true,
+          isFeatured: false,
+          isTrending: false,
+          worthItScore: 0
+        } as any
+      });
+
+      await this.prisma.scrapedProduct.update({ where: { id: scraped.id }, data: { matchedProductId: product.id } });
+
+      if (Number.isFinite(price) && price > 0) {
+        await this.prisma.productPrice.create({
+          data: {
+            productId: product.id,
+            marketplaceId: job.marketplaceId,
+            price,
+            rating,
+            soldCount,
+            reviewCount,
+            productUrl,
+            isActive: true,
+            scrapedAt: new Date()
+          } as any
+        });
+      }
+    }
+
+    await this.prisma.scrapingJob.update({
+      where: { id: job.id },
+      data: {
+        status: 'SUCCESS',
+        finishedAt: new Date(),
+        totalFound: total,
+        errorMessage: null
+      }
+    });
+
+    return { success: true, jobId: job.id, totalFound: total };
+  }
+
+  async markFailed(jobId: string, error?: string) {
+    const job = await this.prisma.scrapingJob.findUnique({ where: { id: jobId } });
+    if (!job) {
+      return { success: false, message: 'Scraping job not found' };
+    }
+
+    await this.prisma.scrapingJob.update({
+      where: { id: job.id },
+      data: {
+        status: 'FAILED',
+        finishedAt: new Date(),
+        errorMessage: error || 'Scraper worker failed'
+      }
+    });
+
+    return { success: false, jobId: job.id, message: error || 'Scraper worker failed' };
   }
 }
